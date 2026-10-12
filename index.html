@@ -88,7 +88,7 @@
 <body class="bg-[#cce3f3] h-screen w-screen flex flex-col justify-between">
 
     <!-- Windows Desktop App Container -->
-    <div class="h-full w-full flex flex-col p-1 sm:p-2 md:p-3 overflow-hidden">
+    <div id="mainAppContainer" class="h-full w-full flex flex-col p-1 sm:p-2 md:p-3 overflow-hidden hidden">
         
         <!-- Main Application Window (Win7 style) -->
         <div class="win7-window flex-1 flex flex-col bg-[#eaf4fc] rounded-t-lg border border-[#3c7fb1] overflow-hidden relative">
@@ -3454,14 +3454,15 @@ function handleLogin() {
 
     // ກວດສອບຕາມ User ແລະ Password ທີ່ກຳນົດ
     if (userInput === "MESXP-ADMIN" && passInput === "@29962200") {
-        // ซື່ອງໜ້າ Login Modal
+        // ເຊື່ອງໜ້າ Login Modal ແລະ ສະແດງໜ້າແອັບຫຼັກ
         document.getElementById('loginModal').classList.add('hidden');
+        document.getElementById('mainAppContainer').classList.remove('hidden');
         
         // ບັນທຶກສະຖານະ Login ລົງ sessionStorage
         sessionStorage.setItem('isLoggedIn', 'true');
         sessionStorage.setItem('currentUser', userInput);
 
-        showAlert("ຍິນດີຕ้อนຮັບແອດມິນ ເຂົ້າສູ່ລະບົບສຳເລັດ!");
+        showAlert("ຍິນດີຕ້ອນຮັບແອດມິນ ເຂົ້າສູ່ລະບົບສຳເລັດ!");
     } else {
         errorDiv.classList.remove('hidden');
     }
@@ -3472,11 +3473,14 @@ window.addEventListener('DOMContentLoaded', () => {
     const isLoggedIn = sessionStorage.getItem('isLoggedIn');
     if (isLoggedIn === 'true') {
         document.getElementById('loginModal').classList.add('hidden');
+        document.getElementById('mainAppContainer').classList.remove('hidden');
+    } else {
+        document.getElementById('mainAppContainer').classList.add('hidden');
     }
 });
     </script>
     <!-- === ໂຄດໃໝ່: ໜ້າຕ່າງເຂົ້າສູ່ລະບົບ (Login Modal) === -->
-<div id="loginModal" class="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center z-[100] p-4">
+<div id="loginModal" class="fixed inset-0 bg-gradient-to-br from-[#112d4e] to-[#3c7fb1] flex items-center justify-center z-[100] p-4">
     <div class="win7-window bg-[#eaf4fc] w-full max-w-sm rounded-lg shadow-2xl border border-[#3c7fb1] overflow-hidden">
         <!-- Titlebar -->
         <div class="win7-titlebar px-3 py-2 flex items-center justify-between">
