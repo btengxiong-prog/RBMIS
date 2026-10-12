@@ -8,6 +8,11 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- SheetJS (XLSX) ສຳລັບອ່ານໄຟລ໌ Excel -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    
+    <!-- === ເພີ່ມ Firebase SDK (Compat Version ສຳລັບ HTML ດ່ຽວ) === -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-storage-compat.js"></script>
     <!-- Font Awesome for Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Google Fonts for Lao support (Phetsarath / Noto Sans Lao) -->
@@ -699,6 +704,22 @@
         </div>
     </div>
     <script>
+
+        // === ຕັ້ງຄ່າການເຊື່ອມຕໍ່ Firebase ===
+    const firebaseConfig = {
+      apiKey: "AIzaSyBH5clJDFj9d59Ey_cQ5qOvh48LFBixNFY",
+      authDomain: "rbmis-aa30f.firebaseapp.com",
+      projectId: "rbmis-aa30f",
+      storageBucket: "rbmis-aa30f.firebasestorage.app",
+      messagingSenderId: "112905725185",
+      appId: "1:112905725185:web:2bcc31bf51dc300d306700",
+      measurementId: "G-GNKJYFGT9J"
+    };
+
+    // ເລີ່ມຕົ້ນລະບົບ Firebase
+    firebase.initializeApp(firebaseConfig);
+    const dbFirestore = firebase.firestore();
+
         // ຂໍ້ມູນລາຍການບັນຊີຄົບຖ້ວນ (ອ້າງອີງຈາກໄຟລ໌ Excel ຊີດປົກກະຕິ)
         const accData = [
           {p:'',ps:'',h:'',lh:'',acc:'',name:'ລວມທັງໝົດ'},
@@ -2364,40 +2385,51 @@
         }
 
         // ຟັງຊັນສຳລັບໂຫຼດຂໍ້ມູນທີ່ເຄີຍບັນທຶກໄວ້
-        function loadPlanData() {
+        async function loadPlanData() {
             const yearInput = document.getElementById('planYearInput');
             if (!yearInput) return;
             
             const year = yearInput.value || 'default';
-            const savedData = localStorage.getItem('budgetPlan_' + year);
             
-            // 1. ລ້າງຄ່າເກົ່າໃນຕາຕະລາງອອກກ່ອນທັງໝົດ
+            // ລ້າງຄ່າເກົ່າກ่อน
             for (let i = 0; i <= 13; i++) {
                 const yInput = document.getElementById('est_y_' + i);
                 if (yInput) {
                     yInput.value = '';
                     document.getElementById('est_q1_' + i).value = '';
                     document.getElementById('est_q2_' + i).value = '';
-                    _calcRowValues(i); // ລ້າງຊ່ອງຄຳນວນ
+                    _calcRowValues(i);
                 }
             }
 
-            // 2. ຖ້າມີຂໍ້ມູນໃນປີນີ້ທີ່ເຄີຍບັນທຶກໄວ້ ໃຫ້ດຶງມາສະແດງ
-            if (savedData) {
-                const planData = JSON.parse(savedData);
-                for (let i = 0; i <= 13; i++) {
-                    if (planData[i]) {
-                        const yInput = document.getElementById('est_y_' + i);
-                        if (yInput) {
-                            yInput.value = planData[i].y || '';
-                            document.getElementById('est_q1_' + i).value = planData[i].q1 || '';
-                            document.getElementById('est_q2_' + i).value = planData[i].q2 || '';
-                            
-                            // ສັ່ງໃຫ້ຄຳນວນໃໝ່ ເພື່ອອັບເດດຍອດລວມ (ກ່ອງ 1) ແລະ ເປີເຊັນ ໃຫ້ຖືກຕ້ອງ
-                            calcEstimate(i);
+            try {
+                // ດຶງຈາກ Firebase Firestore
+                const docSnap = await dbFirestore.collection("budgetPlans").doc(year.toString()).get();
+                let planData = null;
+                
+                if (docSnap.exists) {
+                    planData = docSnap.data().data;
+                } else {
+                    // Fallback ມາ localStorage
+                    const savedData = localStorage.getItem('budgetPlan_' + year);
+                    if (savedData) planData = JSON.parse(savedData);
+                }
+
+                if (planData) {
+                    for (let i = 0; i <= 13; i++) {
+                        if (planData[i]) {
+                            const yInput = document.getElementById('est_y_' + i);
+                            if (yInput) {
+                                yInput.value = planData[i].y || '';
+                                document.getElementById('est_q1_' + i).value = planData[i].q1 || '';
+                                document.getElementById('est_q2_' + i).value = planData[i].q2 || '';
+                                calcEstimate(i);
+                            }
                         }
                     }
                 }
+            } catch (e) {
+                console.error("Load Plan Error:", e);
             }
         }
 
@@ -2935,10 +2967,9 @@
         }
 
         // Save action inside modal
-        function saveModalData() {
+        async function saveModalData() {
             try {
                 if (document.getElementById('planYearInput')) {
-                    // ບັນທຶກຂອງໜ້ານຳເຂົ້າແຜນ
                     const year = document.getElementById('planYearInput').value || 'default';
                     const planData = {};
                     for (let i = 0; i <= 17; i++) {
@@ -2951,36 +2982,42 @@
                             };
                         }
                     }
+                    
+                    // ບັນທຶກຂຶ້ນ Firebase Firestore
+                    await dbFirestore.collection("budgetPlans").doc(year.toString()).set({ data: planData });
+                    
+                    // ສຳຮອງໄວ້ໃນ localStorage ເພື່ອຄວາມວ່ອງໄວ
                     localStorage.setItem('budgetPlan_' + year, JSON.stringify(planData));
-                    showAlert("ບັນທຶກແຜນງົບປະມານ ສົກປີ " + year + " ສຳເລັດແລ້ວ!");
+                    showAlert("ບັນທຶກແຜນງົບປະມານ ສົກປີ " + year + " ຂຶ້ນ Cloud (Firebase) ສຳເລັດແລ້ວ!");
                 } 
                 else if (document.getElementById('importYearRegular')) {
-                    // ບັນທຶກຂອງໜ້າປະຕິບັດແຜນ (ປົກກະຕິ)
                     const year = document.getElementById('importYearRegular').value || 'default';
                     const period = document.getElementById('importPeriodRegular').value;
                     const tbody = document.getElementById('table_body_regular');
                     if (tbody) {
-                        localStorage.setItem(`exec_regular_${year}_${period}`, compressTableData(tbody));
-                        showAlert(`ບັນທຶກແຜນປະຕິບັດ (ປົກກະຕິ) ສົກປີ ${year} ສຳເລັດແລ້ວ!`);
+                        let compressed = compressTableData(tbody);
+                        await dbFirestore.collection("execRegular").doc(`${year}_${period}`).set({ payload: compressed });
+                        localStorage.setItem(`exec_regular_${year}_${period}`, compressed);
+                        showAlert(`ບັນທຶກແຜນປະຕິບັດ (ປົກກະຕິ) ສົກປີ ${year} ຂຶ້ນ Cloud ສຳເລັດແລ້ວ!`);
                     }
                 } 
                 else if (document.getElementById('importYearAcademic')) {
-                    // ບັນທຶກຂອງໜ້າປະຕິບັດແຜນ (ວິຊາການ)
                     const year = document.getElementById('importYearAcademic').value || 'default';
                     const period = document.getElementById('importPeriodAcademic').value;
                     const tbody = document.getElementById('table_body_academic');
                     if (tbody) {
-                        localStorage.setItem(`exec_academic_${year}_${period}`, compressTableData(tbody));
-                        showAlert(`ບັນທຶກແຜນປະຕິບັດ (ວິຊາການ) ສົກປີ ${year} ສຳເລັດແລ້ວ!`);
+                        let compressed = compressTableData(tbody);
+                        await dbFirestore.collection("execAcademic").doc(`${year}_${period}`).set({ payload: compressed });
+                        localStorage.setItem(`exec_academic_${year}_${period}`, compressed);
+                        showAlert(`ບັນທຶກແຜນປະຕິບັດ (ວິຊາການ) ສົກປີ ${year} ຂຶ້ນ Cloud ສຳເລັດແລ້ວ!`);
                     }
                 } 
                 else {
                     showAlert("ບັນທຶກຂໍ້ມູນສຳເລັດແລ້ວ!");
                 }
             } catch (error) {
-                console.error("Save Error:", error);
-                // ດັກຈັບ Error ເວລາໂຄຕ້າຄວາມຈຳເຕັມ
-                showAlert("ບໍ່ສາມາດບັນທຶກໄດ້: ໜ່ວຍຄວາມຈຳ (Storage) ຂອງໂປຣແກຣມເຕັມແລ້ວ! ກະລຸນາລຶບຂໍ້ມູນເກົ່າອອກກ່ອນ.");
+                console.error("Cloud Save Error:", error);
+                showAlert("ເກີດຂໍ້ຜິດພາດໃນการບັນທຶກຂຶ້ນ Cloud: " + error.message);
             }
         }
 
