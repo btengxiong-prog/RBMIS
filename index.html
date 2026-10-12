@@ -2087,7 +2087,13 @@
                     <div class="flex flex-col h-full bg-[#e5ecef] -mx-6 -mt-6 -mb-6 overflow-hidden print-container">
                         <!-- Toolbar Control -->
                         <div class="bg-gradient-to-b from-[#f2f7fc] to-[#e4eef6] border-b border-[#b6cddc] px-4 py-2 flex justify-between items-center text-xs shadow-sm z-10 no-print">
-                            <span class="font-bold text-[#112d4e]"><i class="fa-solid fa-stopwatch text-indigo-600 mr-1"></i> ຕາຕະລາງສັງລວມ ສູນໂມງ (ຕາຕະລາງ 5)</span>
+                            <div class="flex items-center space-x-4">
+                                <span class="font-bold text-[#112d4e]"><i class="fa-solid fa-stopwatch text-indigo-600 mr-1"></i> ຕາຕະລາງສັງລວມ ສູນໂມງ (ຕາຕະລາງ 5)</span>
+                                <div class="flex items-center space-x-2 border-l border-gray-300 pl-4">
+                                    <span class="font-bold text-[#112d4e]">ສົກປີ:</span>
+                                    <input type="number" id="zeroYearInput" value="2025" oninput="updateZeroHourData()" class="border border-gray-300 rounded px-2 py-1 shadow-sm focus:border-blue-500 focus:outline-none bg-white font-bold text-indigo-800 w-20 text-center">
+                                </div>
+                            </div>
                             <button onclick="window.print()" class="px-4 py-1.5 bg-gradient-to-b from-gray-600 to-gray-700 text-white rounded shadow-sm flex items-center space-x-1.5 hover:from-gray-700 hover:to-gray-800">
                                 <i class="fa-solid fa-print"></i> <span>ພິມເອກະສານ (A4 ທາງນອນ)</span>
                             </button>
@@ -2111,11 +2117,11 @@
                                     </div>
                                     <div class="text-right">
                                         <p>ເລກທີ:..................../ສກຂ.ຊຍ</p>
-                                        <p>ໄຊຍະບູລີ, ວັນທີ:......../......../ 2025</p>
+                                        <p>ໄຊຍະບູລີ, ວັນທີ:......../......../ <span class="dyn-year-zero">2025</span></p>
                                     </div>
                                 </div>
                                 <div class="text-center mb-6 font-bold text-[16px]">
-                                    ຕາຕະລາງສັງລວມ ລາຍຈ່າຍ ງົບປະມານ ແລະ ວິຊາການ ສູນໂມງ ( ແຕ່ວັນທີ 01/01/2025 - 31/12/2025 ) ປີ 2025
+                                    ຕາຕະລາງສັງລວມ ລາຍຈ່າຍ ງົບປະມານ ແລະ ວິຊາການ ສູນໂມງ ( ແຕ່ວັນທີ 01/01/<span class="dyn-year-zero">2025</span> - 31/12/<span class="dyn-year-zero">2025</span> ) ປີ <span class="dyn-year-zero">2025</span>
                                 </div>
 
                                 <table class="w-full border-collapse border border-black text-center text-[11px] whitespace-nowrap">
@@ -2123,10 +2129,10 @@
                                         <tr>
                                             <th class="border border-black p-2 w-8">ລ/ດ</th>
                                             <th class="border border-black p-2 min-w-[250px]">ການເຄື່ອນໄຫວງົບປະມານ</th>
-                                            <th class="border border-black p-2 w-28">ແຜນການປີ<br>ດັດແກ້ 2025</th>
+                                            <th class="border border-black p-2 w-28">ແຜນການປີ<br>ດັດແກ້ <span class="dyn-year-zero">2025</span></th>
                                             <th class="border border-black p-2 w-28">ອະນຸມັດ</th>
                                             <th class="border border-black p-2 w-28">ເຫັນດີຈ່າຍ</th>
-                                            <th class="border border-black p-2 w-28">ປະຕິບັດ<br>ລາຍຈ່າຍຮອດວັນທີ<br>31/12/2025</th>
+                                            <th class="border border-black p-2 w-28">ປະຕິບັດ<br>ລາຍຈ່າຍຮອດວັນທີ<br>31/12/<span class="dyn-year-zero">2025</span></th>
                                             <th class="border border-black p-2 w-24">ເອກະສານ<br>ຄ້າງຈ່າຍ</th>
                                             <th class="border border-black p-2 w-28">ຄ້າງຕາມ<br>ແຜນປີ</th>
                                             <th class="border border-black p-2 w-28">ຄ້າງຕາມ<br>ອະນຸມັດ</th>
@@ -2143,34 +2149,9 @@
                                             <th class="border border-black p-0.5">8</th>
                                         </tr>
                                     </thead>
-                                    <tbody>
-                                        <tr class="font-bold"><td class="border border-black p-1">I.</td><td class="border border-black p-1 text-left px-2">ລວມລາຍຈ່າຍງົບປະມານທັງໝົດ</td><td class="border border-black p-1 text-right px-2">235,571,875,000</td><td class="border border-black p-1 text-right px-2">228,532,748,162</td><td class="border border-black p-1 text-right px-2">228,532,748,162</td><td class="border border-black p-1 text-right px-2">228,532,748,162</td><td class="border border-black p-1"></td><td class="border border-black p-1 text-right px-2">7,039,126,838</td><td class="border border-black p-1"></td></tr>
-                                        <tr class="font-bold"><td class="border border-black p-1">ກ</td><td class="border border-black p-1 text-left px-2">ລາຍຈ່າຍງົບປະມານເປັນໃບຖອນເງິນ ທັງໝົດ<br>ປີ 2025</td><td class="border border-black p-1 text-right px-2">235,571,875,000</td><td class="border border-black p-1 text-right px-2">228,532,748,162</td><td class="border border-black p-1 text-right px-2">228,532,748,162</td><td class="border border-black p-1 text-right px-2">228,532,748,162</td><td class="border border-black p-1"></td><td class="border border-black p-1 text-right px-2">7,039,126,838</td><td class="border border-black p-1"></td></tr>
-                                        <tr><td class="border border-black p-1"></td><td class="border border-black p-1 text-left px-4">ເງິນເດືອນ ( ພາກ 60 )</td><td class="border border-black p-1 text-right px-2">189,764,000,000</td><td class="border border-black p-1 text-right px-2">189,292,206,645</td><td class="border border-black p-1 text-right px-2">189,292,206,645</td><td class="border border-black p-1 text-right px-2">189,292,206,645</td><td class="border border-black p-1"></td><td class="border border-black p-1 text-right px-2">471,793,355</td><td class="border border-black p-1"></td></tr>
-                                        <tr><td class="border border-black p-1"></td><td class="border border-black p-1 text-left px-4">ເງິນອຸດໜູນ ( ພາກ 61 )</td><td class="border border-black p-1 text-right px-2">24,544,400,000</td><td class="border border-black p-1 text-right px-2">17,977,066,517</td><td class="border border-black p-1 text-right px-2">17,977,066,517</td><td class="border border-black p-1 text-right px-2">17,977,066,517</td><td class="border border-black p-1"></td><td class="border border-black p-1 text-right px-2">6,567,333,483</td><td class="border border-black p-1"></td></tr>
-                                        <tr><td class="border border-black p-1"></td><td class="border border-black p-1 text-left px-4">ເງິນບໍລິຫານ ( ພາກ 62 )</td><td class="border border-black p-1 text-right px-2">5,637,445,000</td><td class="border border-black p-1 text-right px-2">5,637,445,000</td><td class="border border-black p-1 text-right px-2">5,637,445,000</td><td class="border border-black p-1 text-right px-2">5,637,445,000</td><td class="border border-black p-1"></td><td class="border border-black p-1"></td><td class="border border-black p-1"></td></tr>
-                                        <tr><td class="border border-black p-1"></td><td class="border border-black p-1 text-left px-4">ເງິນດັດສົມ ( ພາກ 63 )</td><td class="border border-black p-1 text-right px-2">855,000,000</td><td class="border border-black p-1 text-right px-2">855,000,000</td><td class="border border-black p-1 text-right px-2">855,000,000</td><td class="border border-black p-1 text-right px-2">855,000,000</td><td class="border border-black p-1"></td><td class="border border-black p-1"></td><td class="border border-black p-1"></td></tr>
-                                        <tr><td class="border border-black p-1"></td><td class="border border-black p-1 text-left px-4">ເງິນແຮ ແລະ ອື່ນໆ ( ພາກ 65 )</td><td class="border border-black p-1 text-right px-2">12,594,580,000</td><td class="border border-black p-1 text-right px-2">12,594,580,000</td><td class="border border-black p-1 text-right px-2">12,594,580,000</td><td class="border border-black p-1 text-right px-2">12,594,580,000</td><td class="border border-black p-1"></td><td class="border border-black p-1"></td><td class="border border-black p-1"></td></tr>
-                                        <tr><td class="border border-black p-1"></td><td class="border border-black p-1 text-left px-4">ຊື້ຊັບສົມບັດບໍລິຫານ ( ພາກ 66 )</td><td class="border border-black p-1 text-right px-2">160,000,000</td><td class="border border-black p-1 text-right px-2">160,000,000</td><td class="border border-black p-1 text-right px-2">160,000,000</td><td class="border border-black p-1 text-right px-2">160,000,000</td><td class="border border-black p-1"></td><td class="border border-black p-1"></td><td class="border border-black p-1"></td></tr>
-                                        <tr><td class="border border-black p-1"></td><td class="border border-black p-1 text-left px-4">ລາຍຈ່າຍລົງທຶນ ( ພາກ 67 )</td><td class="border border-black p-1 text-right px-2">2,016,450,000</td><td class="border border-black p-1 text-right px-2">2,016,450,000</td><td class="border border-black p-1 text-right px-2">2,016,450,000</td><td class="border border-black p-1 text-right px-2">2,016,450,000</td><td class="border border-black p-1"></td><td class="border border-black p-1"></td><td class="border border-black p-1"></td></tr>
-
-                                        <tr class="font-bold"><td class="border border-black p-1">1</td><td class="border border-black p-1 text-left px-2">ລາຍຈ່າຍງົບປະມານ ປົກກະຕິ ປີ 2025</td><td class="border border-black p-1 text-right px-2">235,502,430,000</td><td class="border border-black p-1 text-right px-2">228,463,303,162</td><td class="border border-black p-1 text-right px-2">228,463,303,162</td><td class="border border-black p-1 text-right px-2">228,463,303,162</td><td class="border border-black p-1"></td><td class="border border-black p-1 text-right px-2">7,039,126,838</td><td class="border border-black p-1"></td></tr>
-                                        <tr><td class="border border-black p-1"></td><td class="border border-black p-1 text-left px-4">ເງິນເດືອນ ( ພາກ 60 )</td><td class="border border-black p-1 text-right px-2">189,764,000,000</td><td class="border border-black p-1 text-right px-2">189,292,206,645</td><td class="border border-black p-1 text-right px-2">189,292,206,645</td><td class="border border-black p-1 text-right px-2">189,292,206,645</td><td class="border border-black p-1"></td><td class="border border-black p-1 text-right px-2">471,793,355</td><td class="border border-black p-1"></td></tr>
-                                        <tr><td class="border border-black p-1"></td><td class="border border-black p-1 text-left px-4">ເງິນອຸດໜູນ ( ພາກ 61 )</td><td class="border border-black p-1 text-right px-2">24,544,400,000</td><td class="border border-black p-1 text-right px-2">17,977,066,517</td><td class="border border-black p-1 text-right px-2">17,977,066,517</td><td class="border border-black p-1 text-right px-2">17,977,066,517</td><td class="border border-black p-1"></td><td class="border border-black p-1 text-right px-2">6,567,333,483</td><td class="border border-black p-1"></td></tr>
-                                        <tr><td class="border border-black p-1"></td><td class="border border-black p-1 text-left px-4">ເງິນບໍລິຫານ ( ພາກ 62 )</td><td class="border border-black p-1 text-right px-2">5,568,000,000</td><td class="border border-black p-1 text-right px-2">5,568,000,000</td><td class="border border-black p-1 text-right px-2">5,568,000,000</td><td class="border border-black p-1 text-right px-2">5,568,000,000</td><td class="border border-black p-1"></td><td class="border border-black p-1"></td><td class="border border-black p-1"></td></tr>
-                                        <tr><td class="border border-black p-1"></td><td class="border border-black p-1 text-left px-4">ເງິນດັດສົມ ( ພາກ 63 )</td><td class="border border-black p-1 text-right px-2">855,000,000</td><td class="border border-black p-1 text-right px-2">855,000,000</td><td class="border border-black p-1 text-right px-2">855,000,000</td><td class="border border-black p-1 text-right px-2">855,000,000</td><td class="border border-black p-1"></td><td class="border border-black p-1"></td><td class="border border-black p-1"></td></tr>
-                                        <tr><td class="border border-black p-1"></td><td class="border border-black p-1 text-left px-4">ເງິນແຮ ແລະ ອື່ນໆ ( ພາກ 65 )</td><td class="border border-black p-1 text-right px-2">12,594,580,000</td><td class="border border-black p-1 text-right px-2">12,594,580,000</td><td class="border border-black p-1 text-right px-2">12,594,580,000</td><td class="border border-black p-1 text-right px-2">12,594,580,000</td><td class="border border-black p-1"></td><td class="border border-black p-1"></td><td class="border border-black p-1"></td></tr>
-                                        <tr><td class="border border-black p-1"></td><td class="border border-black p-1 text-left px-4">ຊື້ຊັບສົມບັດບໍລິຫານ ( ພາກ 66 )</td><td class="border border-black p-1 text-right px-2">160,000,000</td><td class="border border-black p-1 text-right px-2">160,000,000</td><td class="border border-black p-1 text-right px-2">160,000,000</td><td class="border border-black p-1 text-right px-2">160,000,000</td><td class="border border-black p-1"></td><td class="border border-black p-1"></td><td class="border border-black p-1"></td></tr>
-                                        <tr><td class="border border-black p-1"></td><td class="border border-black p-1 text-left px-4">ລາຍຈ່າຍລົງທຶນ ( ພາກ 67 )</td><td class="border border-black p-1 text-right px-2">2,016,450,000</td><td class="border border-black p-1 text-right px-2">2,016,450,000</td><td class="border border-black p-1 text-right px-2">2,016,450,000</td><td class="border border-black p-1 text-right px-2">2,016,450,000</td><td class="border border-black p-1"></td><td class="border border-black p-1"></td><td class="border border-black p-1"></td></tr>
-
-                                        <tr class="font-bold"><td class="border border-black p-1">2</td><td class="border border-black p-1 text-left px-2">ລາຍຈ່າຍງົບປະມານ ວິຊາການ ປີ 2025</td><td class="border border-black p-1 text-right px-2">69,445,000</td><td class="border border-black p-1 text-right px-2">69,445,000</td><td class="border border-black p-1 text-right px-2">69,445,000</td><td class="border border-black p-1 text-right px-2">69,445,000</td><td class="border border-black p-1"></td><td class="border border-black p-1"></td><td class="border border-black p-1"></td></tr>
-                                        <tr><td class="border border-black p-1"></td><td class="border border-black p-1 text-left px-4">ເງິນເດືອນ ( ພາກ 60 )</td><td class="border border-black p-1"></td><td class="border border-black p-1"></td><td class="border border-black p-1"></td><td class="border border-black p-1"></td><td class="border border-black p-1"></td><td class="border border-black p-1"></td><td class="border border-black p-1"></td></tr>
-                                        <tr><td class="border border-black p-1"></td><td class="border border-black p-1 text-left px-4">ເງິນອຸດໜູນ ( ພາກ 61 )</td><td class="border border-black p-1"></td><td class="border border-black p-1"></td><td class="border border-black p-1"></td><td class="border border-black p-1"></td><td class="border border-black p-1"></td><td class="border border-black p-1"></td><td class="border border-black p-1"></td></tr>
-                                        <tr><td class="border border-black p-1"></td><td class="border border-black p-1 text-left px-4">ເງິນບໍລິຫານ ( ພາກ 62 )</td><td class="border border-black p-1 text-right px-2">69,445,000</td><td class="border border-black p-1 text-right px-2">69,445,000</td><td class="border border-black p-1 text-right px-2">69,445,000</td><td class="border border-black p-1 text-right px-2">69,445,000</td><td class="border border-black p-1"></td><td class="border border-black p-1"></td><td class="border border-black p-1"></td></tr>
-                                        <tr><td class="border border-black p-1"></td><td class="border border-black p-1 text-left px-4">ເງິນດັດສົມ ( ພາກ 63 )</td><td class="border border-black p-1"></td><td class="border border-black p-1"></td><td class="border border-black p-1"></td><td class="border border-black p-1"></td><td class="border border-black p-1"></td><td class="border border-black p-1"></td><td class="border border-black p-1"></td></tr>
-                                        <tr><td class="border border-black p-1"></td><td class="border border-black p-1 text-left px-4">ເງິນແຮ ແລະ ອື່ນໆ ( ພາກ 65 )</td><td class="border border-black p-1"></td><td class="border border-black p-1"></td><td class="border border-black p-1"></td><td class="border border-black p-1"></td><td class="border border-black p-1"></td><td class="border border-black p-1"></td><td class="border border-black p-1"></td></tr>
-                                        <tr><td class="border border-black p-1"></td><td class="border border-black p-1 text-left px-4">ຊື້ຊັບສົມບັດບໍລິຫານ ( ພາກ 66 )</td><td class="border border-black p-1"></td><td class="border border-black p-1"></td><td class="border border-black p-1"></td><td class="border border-black p-1"></td><td class="border border-black p-1"></td><td class="border border-black p-1"></td><td class="border border-black p-1"></td></tr>
-                                        <tr><td class="border border-black p-1"></td><td class="border border-black p-1 text-left px-4">ລາຍຈ່າຍລົງທຶນ ( ພາກ 67 )</td><td class="border border-black p-1"></td><td class="border border-black p-1"></td><td class="border border-black p-1"></td><td class="border border-black p-1"></td><td class="border border-black p-1"></td><td class="border border-black p-1"></td><td class="border border-black p-1"></td></tr>
+                                    <tbody id="table_body_zero" class="text-gray-800">
+                                        <!-- ຂໍ້ມູນຈະຖືກດຶງມາໃສ່ບ່ອນນີ້ອັດຕະໂນມັດ -->
+                                        <tr><td colspan="9" class="text-center p-6 text-gray-500">ກຳລັງໂຫຼດຂໍ້ມູນ...</td></tr>
                                     </tbody>
                                 </table>
                             </div>
@@ -3139,6 +3120,119 @@
             }
         }
 
+        // ຟັງຊັນອັບເດດຂໍ້ມູນຕາຕະລາງ ສູນໂມງ ດຶງຈາກປະຕິບັດແຜນ
+        function updateZeroHourData() {
+            const yearInput = document.getElementById('zeroYearInput');
+            if (!yearInput) return;
+            const year = yearInput.value || new Date().getFullYear().toString();
+
+            // 1. ອັບເດດຕົວເລກປີໃນໜ້າເອກະສານ
+            document.querySelectorAll('.dyn-year-zero').forEach(el => el.innerText = year);
+
+            // 2. ດຶງຂໍ້ມູນແຜນ ແລະ ປະຕິບັດ ຈາກ LocalStorage
+            let regSaved = localStorage.getItem('exec_regular_' + year + '_y1');
+            let acadSaved = localStorage.getItem('exec_academic_' + year + '_y1');
+
+            let regTotals = extractExecTotals(regSaved);
+            let acadTotals = extractExecTotals(acadSaved);
+
+            const parts = ['60', '61', '62', '63', '65', '66', '67'];
+            const partNames = {
+                '60': 'ເງິນເດືອນ ( ພາກ 60 )',
+                '61': 'ເງິນອຸດໜູນ ( ພາກ 61 )',
+                '62': 'ເງິນບໍລິຫານ ( ພາກ 62 )',
+                '63': 'ເງິນດັດສົມ ( ພາກ 63 )',
+                '65': 'ເງິນແຮ ແລະ ອື່ນໆ ( ພາກ 65 )',
+                '66': 'ຊື້ຊັບສົມບັດບໍລິຫານ ( ພາກ 66 )',
+                '67': 'ລາຍຈ່າຍລົງທຶນ ( ພາກ 67 )'
+            };
+
+            const tbody = document.getElementById('table_body_zero');
+            if (!tbody) return;
+
+            const formatVal = (val) => val > 0 ? val.toLocaleString('en-US') : '';
+
+            // ຟັງຊັນຊ່ວຍສ້າງແຖວຕາຕະລາງ (ຕັດຄວາມຊ້ຳຊ້ອນ)
+            function genRow(idx, title, dataObj, isBold = false, isUnderline = false, indent = 0) {
+                let plan = dataObj.plan || 0;
+                let act = dataObj.actual || 0;
+                // ສົມມຸດຕົວເລກ ອະນຸມັດ, ເຫັນດີຈ່າຍ, ປະຕິບັດ ເປັນຕົວດຽວກັນ (ອ້າງອີງຕາມແບບຟອມເດີມ)
+                let appr = act;
+                let agreed = act;
+                let paid = act;
+                
+                let diffPlan = plan > paid ? plan - paid : 0;
+                let diffAppr = appr > paid ? appr - paid : 0;
+
+                let rowClass = isBold ? "font-bold" : "";
+                let titleClass = "border border-black p-1 text-left";
+                if (indent === 1) titleClass += " px-2";
+                else if (indent === 2) titleClass += " px-4";
+                if (isUnderline) titleClass += " underline";
+
+                let numClass = "border border-black p-1 text-right px-2";
+                if (isUnderline) numClass += " underline";
+
+                return `
+                <tr class="${rowClass}">
+                    <td class="border border-black p-1 text-center ${isUnderline ? 'underline' : ''}">${idx}</td>
+                    <td class="${titleClass}">${title}</td>
+                    <td class="${numClass}">${formatVal(plan)}</td>
+                    <td class="${numClass}">${formatVal(appr)}</td>
+                    <td class="${numClass}">${formatVal(agreed)}</td>
+                    <td class="${numClass}">${formatVal(paid)}</td>
+                    <td class="border border-black p-1"></td>
+                    <td class="${numClass}">${formatVal(diffPlan)}</td>
+                    <td class="${numClass}">${formatVal(diffAppr)}</td>
+                </tr>`;
+            }
+
+            let html = "";
+            let totPlan = 0, totAct = 0;
+            let regTotPlan = 0, regTotAct = 0;
+            let acadTotPlan = 0, acadTotAct = 0;
+
+            // ບວກຍອດລວມທັງໝົດ
+            parts.forEach(p => {
+                regTotPlan += (regTotals.plan[p] || 0);
+                regTotAct += (regTotals.actual[p] || 0);
+                acadTotPlan += (acadTotals.plan[p] || 0);
+                acadTotAct += (acadTotals.actual[p] || 0);
+            });
+            totPlan = regTotPlan + acadTotPlan;
+            totAct = regTotAct + acadTotAct;
+
+            // --- ຍັດຂໍ້ມູນລົງຕາຕະລາງ ---
+            // I. ຍອດລວມໃຫຍ່
+            html += genRow("I.", "ລວມລາຍຈ່າຍງົບປະມານທັງໝົດ", {plan: totPlan, actual: totAct}, true, true, 1);
+            
+            // ກ. ລາຍຈ່າຍລວມທັງໝົດ ແຍກຕາມພາກ
+            html += genRow("ກ.", `ລາຍຈ່າຍງົບປະມານເປັນໃບຖອນເງິນ ທັງໝົດ ປີ ${year}`, {plan: totPlan, actual: totAct}, true, false, 1);
+            parts.forEach(p => {
+                let pPlan = (regTotals.plan[p] || 0) + (acadTotals.plan[p] || 0);
+                let pAct = (regTotals.actual[p] || 0) + (acadTotals.actual[p] || 0);
+                html += genRow("", partNames[p], {plan: pPlan, actual: pAct}, false, false, 2);
+            });
+
+            // 1. ປົກກະຕິ ແຍກຕາມພາກ
+            html += genRow("1", `ລາຍຈ່າຍງົບປະມານ ປົກກະຕິ ປີ ${year}`, {plan: regTotPlan, actual: regTotAct}, true, false, 1);
+            parts.forEach(p => {
+                let pPlan = regTotals.plan[p] || 0;
+                let pAct = regTotals.actual[p] || 0;
+                html += genRow("", partNames[p], {plan: pPlan, actual: pAct}, false, false, 2);
+            });
+
+            // 2. ວິຊາການ ແຍກຕາມພາກ
+            html += genRow("2", `ລາຍຈ່າຍງົບປະມານ ວິຊາການ ປີ ${year}`, {plan: acadTotPlan, actual: acadTotAct}, true, false, 1);
+            parts.forEach(p => {
+                let pPlan = acadTotals.plan[p] || 0;
+                let pAct = acadTotals.actual[p] || 0;
+                html += genRow("", partNames[p], {plan: pPlan, actual: pAct}, false, false, 2);
+            });
+
+            tbody.innerHTML = html;
+        }
+
         // Open specific data module modal
         function openModule(moduleKey) {
             const data = moduleData[moduleKey];
@@ -3165,6 +3259,8 @@
                 setTimeout(renderBudgetTable, 10);
             } else if (moduleKey === 'allocation') {
                 setTimeout(updateMemoData, 10);
+            } else if (moduleKey === 'budget_academic_zero') {
+                setTimeout(updateZeroHourData, 10);
             } else if (moduleKey === 'estimate') {
                 setTimeout(loadPlanData, 10);
             } else if (moduleKey === 'execute_regular') {
