@@ -2385,7 +2385,7 @@
         }
 
         // ຟັງຊັນສຳລັບໂຫຼດຂໍ້ມູນທີ່ເຄີຍບັນທຶກໄວ້
-        let unsubPlan = null; // ຕົວແປັກຢຸດ Listener ເວລາປິດໜ້າຕ່າງ
+        let unsubPlan = null;
 
         function loadPlanData() {
             const yearInput = document.getElementById('planYearInput');
@@ -2393,14 +2393,12 @@
             
             const year = yearInput.value || 'default';
             
-            // ຖ້າມີ Listener ເກົ່າຢູ່ ໃຫ້ປິດກ່ອນເພື່ອບໍ່ໃຫ້ຊ້ຳຊ້ອນ
             if (unsubPlan) unsubPlan();
 
-            // ໃຊ້ onSnapshot ຮັບຂໍ້ມູນແບບ Realtime ຈາກ Firebase
             unsubPlan = dbFirestore.collection("budgetPlans").doc(year.toString())
                 .onSnapshot((docSnap) => {
-                    // ລ້າງຄ່າເກົ່າກ່ອນ
-                    for (let i = 0; i <= 13; i++) {
+                    // ລ້າງຄ່າເກົ່າທຸກແຖວ (0 ເຖິງ 17)
+                    for (let i = 0; i < 18; i++) {
                         const yInput = document.getElementById('est_y_' + i);
                         if (yInput) {
                             yInput.value = '';
@@ -2410,15 +2408,25 @@
                         }
                     }
 
+                    let planData = null;
                     if (docSnap.exists) {
-                        const planData = docSnap.data().data;
-                        for (let i = 0; i <= 13; i++) {
+                        planData = docSnap.data().data;
+                    } else {
+                        const savedData = localStorage.getItem('budgetPlan_' + year);
+                        if (savedData) planData = JSON.parse(savedData);
+                    }
+
+                    if (planData) {
+                        for (let i = 0; i < 18; i++) {
                             if (planData[i]) {
                                 const yInput = document.getElementById('est_y_' + i);
+                                const q1Input = document.getElementById('est_q1_' + i);
+                                const q2Input = document.getElementById('est_q2_' + i);
+                                
                                 if (yInput) {
                                     yInput.value = planData[i].y || '';
-                                    document.getElementById('est_q1_' + i).value = planData[i].q1 || '';
-                                    document.getElementById('est_q2_' + i).value = planData[i].q2 || '';
+                                    if (q1Input) q1Input.value = planData[i].q1 || '';
+                                    if (q2Input) q2Input.value = planData[i].q2 || '';
                                     calcEstimate(i);
                                 }
                             }
@@ -2970,40 +2978,42 @@
         // Save action inside modal
         async function saveModalData() {
             try {
-                // 1. ກວດສອບວ່າຢູ່ໜ້ານຳເຂົ້າແຜນຫລືບໍ່
                 if (document.getElementById('planYearInput')) {
                     const yearInput = document.getElementById('planYearInput');
                     const year = yearInput ? yearInput.value : 'default';
                     const planData = {};
                     
-                    for (let i = 0; i <= 17; i++) {
+                    // ວົນລູບເກັບຂໍ້ມູນທຸກແຖວຢ່າງครบຖ້ວນ (index 0 ເຖິງ 17)
+                    for (let i = 0; i < 18; i++) {
                         const yInput = document.getElementById('est_y_' + i);
-                        if (yInput) {
+                        const q1Input = document.getElementById('est_q1_' + i);
+                        const q2Input = document.getElementById('est_q2_' + i);
+                        
+                        if (yInput || q1Input || q2Input) {
                             planData[i] = {
-                                y: yInput.value,
-                                q1: document.getElementById('est_q1_' + i).value,
-                                q2: document.getElementById('est_q2_' + i).value
+                                y: yInput ? yInput.value : '',
+                                q1: q1Input ? q1Input.value : '',
+                                q2: q2Input ? q2Input.value : ''
                             };
                         }
                     }
                     
-                    // ບັນທຶກລົງ localStorage ໄວ້ກ່ອນສະເໝີ ເພື່ອຄວາມວ່ອງໄວ ແລະ ປ້ອງກັນເນັດຫຼຸດ
+                    // ບັນທຶກລົງ localStorage ໄວ້ກ່ອນ
                     localStorage.setItem('budgetPlan_' + year, JSON.stringify(planData));
 
-                    // ພະຍາຍາມບັນທຶກຂຶ້ນ Firebase Cloud (ຖ້າເຊື່ອມຕໍ່ໄດ້)
+                    // ບັນທຶກຂຶ້ນ Firebase Cloud (Realtime)
                     try {
                         if (typeof dbFirestore !== 'undefined') {
                             await dbFirestore.collection("budgetPlans").doc(year.toString()).set({ data: planData });
-                            showAlert("ບັນທຶກແຜນງົບປະມານ ສົກປີ " + year + " ຂຶ້ນ Cloud ແລະ Local ສຳເລັດແລ້ວ!");
+                            showAlert("ບັນທຶກແຜນງົບປະມານ ສົກປີ " + year + " ທຸກແຖວສຳເລັດແລ້ວ!");
                         } else {
-                            showAlert("ບັນທຶກແຜນງົບປະມານ ສົກປີ " + year + " ລົງລະບົບ Local ສຳເລັດແລ້ວ!");
+                            showAlert("ບັນທຶກແຜນງົບປະມານ ສົກປີ " + year + " ລົງລະບົບສຳເລັດແລ້ວ!");
                         }
                     } catch (cloudErr) {
                         console.warn("Cloud Sync Warning:", cloudErr);
-                        showAlert("ບັນທຶກລົງເຄື່ອງ (Local) ສຳເລັດແລ້ວ! (ແຕ່ Cloud Sync ບໍ່ສຳເລັດ: " + cloudErr.message + ")");
+                        showAlert("ບັນທຶກລົງເຄື່ອງສຳເລັດແລ້ວ! (ແຕ່ Cloud Sync ມີບັນຫາ: " + cloudErr.message + ")");
                     }
                 } 
-                // 2. ກວດສອບວ່າຢູ່ໜ້າປະຕິບັດແຜນ (ປົກກະຕິ)
                 else if (document.getElementById('importYearRegular')) {
                     const year = document.getElementById('importYearRegular').value || 'default';
                     const period = document.getElementById('importPeriodRegular').value;
@@ -3011,17 +3021,14 @@
                     if (tbody) {
                         let compressed = compressTableData(tbody);
                         localStorage.setItem(`exec_regular_${year}_${period}`, compressed);
-                        
                         try {
                             if (typeof dbFirestore !== 'undefined') {
                                 await dbFirestore.collection("execBudget").doc(`regular_${year}_${period}`).set({ payload: compressed });
                             }
                         } catch (e) { console.warn(e); }
-                        
                         showAlert(`ບັນທຶກແຜນປະຕິບັດ (ປົກກະຕິ) ສົກປີ ${year} ສຳເລັດແລ້ວ!`);
                     }
                 } 
-                // 3. ກວດສອບວ່າຢູ່ໜ້າປະຕິບັດແຜນ (ວິຊາການ)
                 else if (document.getElementById('importYearAcademic')) {
                     const year = document.getElementById('importYearAcademic').value || 'default';
                     const period = document.getElementById('importPeriodAcademic').value;
@@ -3029,13 +3036,11 @@
                     if (tbody) {
                         let compressed = compressTableData(tbody);
                         localStorage.setItem(`exec_academic_${year}_${period}`, compressed);
-                        
                         try {
                             if (typeof dbFirestore !== 'undefined') {
                                 await dbFirestore.collection("execBudget").doc(`academic_${year}_${period}`).set({ payload: compressed });
                             }
                         } catch (e) { console.warn(e); }
-                        
                         showAlert(`ບັນທຶກແຜນປະຕິບັດ (ວິຊາການ) ສົກປີ ${year} ສຳເລັດແລ້ວ!`);
                     }
                 } 
