@@ -2970,9 +2970,12 @@
         // Save action inside modal
         async function saveModalData() {
             try {
+                // 1. ກວດສອບວ່າຢູ່ໜ້ານຳເຂົ້າແຜນຫລືບໍ່
                 if (document.getElementById('planYearInput')) {
-                    const year = document.getElementById('planYearInput').value || 'default';
+                    const yearInput = document.getElementById('planYearInput');
+                    const year = yearInput ? yearInput.value : 'default';
                     const planData = {};
+                    
                     for (let i = 0; i <= 17; i++) {
                         const yInput = document.getElementById('est_y_' + i);
                         if (yInput) {
@@ -2984,35 +2987,63 @@
                         }
                     }
                     
-                    // ບັນທຶກຂຶ້ນ Firebase Firestore (Realtime จะอัปเดตอัตโนมัติ)
-                    await dbFirestore.collection("budgetPlans").doc(year.toString()).set({ data: planData });
-                    showAlert("ບັນທຶກແຜນງົບປະມານ ສົກປີ " + year + " ຂຶ້ນ Realtime Cloud ສสำเร็จແລ້ວ!");
+                    // ບັນທຶກລົງ localStorage ໄວ້ກ່ອນສະເໝີ ເພື່ອຄວາມວ່ອງໄວ ແລະ ປ້ອງກັນເນັດຫຼຸດ
+                    localStorage.setItem('budgetPlan_' + year, JSON.stringify(planData));
+
+                    // ພະຍາຍາມບັນທຶກຂຶ້ນ Firebase Cloud (ຖ້າເຊື່ອມຕໍ່ໄດ້)
+                    try {
+                        if (typeof dbFirestore !== 'undefined') {
+                            await dbFirestore.collection("budgetPlans").doc(year.toString()).set({ data: planData });
+                            showAlert("ບັນທຶກແຜນງົບປະມານ ສົກປີ " + year + " ຂຶ້ນ Cloud ແລະ Local ສຳເລັດແລ້ວ!");
+                        } else {
+                            showAlert("ບັນທຶກແຜນງົບປະມານ ສົກປີ " + year + " ລົງລະບົບ Local ສຳເລັດແລ້ວ!");
+                        }
+                    } catch (cloudErr) {
+                        console.warn("Cloud Sync Warning:", cloudErr);
+                        showAlert("ບັນທຶກລົງເຄື່ອງ (Local) ສຳເລັດແລ້ວ! (ແຕ່ Cloud Sync ບໍ່ສຳເລັດ: " + cloudErr.message + ")");
+                    }
                 } 
+                // 2. ກວດສອບວ່າຢູ່ໜ້າປະຕິບັດແຜນ (ປົກກະຕິ)
                 else if (document.getElementById('importYearRegular')) {
                     const year = document.getElementById('importYearRegular').value || 'default';
                     const period = document.getElementById('importPeriodRegular').value;
                     const tbody = document.getElementById('table_body_regular');
                     if (tbody) {
                         let compressed = compressTableData(tbody);
-                        await dbFirestore.collection("execBudget").doc(`regular_${year}_${period}`).set({ payload: compressed });
-                        showAlert(`ບັນທຶກແຜນປະຕິບັດ (ປົກກະຕິ) ສົກປີ ${year} ຂຶ້ນ Realtime Cloud ສຳເລັດແລ້ວ!`);
+                        localStorage.setItem(`exec_regular_${year}_${period}`, compressed);
+                        
+                        try {
+                            if (typeof dbFirestore !== 'undefined') {
+                                await dbFirestore.collection("execBudget").doc(`regular_${year}_${period}`).set({ payload: compressed });
+                            }
+                        } catch (e) { console.warn(e); }
+                        
+                        showAlert(`ບັນທຶກແຜນປະຕິບັດ (ປົກກະຕິ) ສົກປີ ${year} ສຳເລັດແລ້ວ!`);
                     }
                 } 
+                // 3. ກວດສອບວ່າຢູ່ໜ້າປະຕິບັດແຜນ (ວິຊາການ)
                 else if (document.getElementById('importYearAcademic')) {
                     const year = document.getElementById('importYearAcademic').value || 'default';
                     const period = document.getElementById('importPeriodAcademic').value;
                     const tbody = document.getElementById('table_body_academic');
                     if (tbody) {
                         let compressed = compressTableData(tbody);
-                        await dbFirestore.collection("execBudget").doc(`academic_${year}_${period}`).set({ payload: compressed });
-                        showAlert(`ບັນທຶກແຜນປະຕິບັດ (ວິຊາການ) ສົກປີ ${year} ຂຶ້ນ Realtime Cloud ສຳເລັດແລ້ວ!`);
+                        localStorage.setItem(`exec_academic_${year}_${period}`, compressed);
+                        
+                        try {
+                            if (typeof dbFirestore !== 'undefined') {
+                                await dbFirestore.collection("execBudget").doc(`academic_${year}_${period}`).set({ payload: compressed });
+                            }
+                        } catch (e) { console.warn(e); }
+                        
+                        showAlert(`ບັນທຶກແຜນປະຕິບັດ (ວິຊາການ) ສົກປີ ${year} ສຳເລັດແລ້ວ!`);
                     }
                 } 
                 else {
                     showAlert("ບັນທຶກຂໍ້ມູນສຳເລັດແລ້ວ!");
                 }
             } catch (error) {
-                console.error("Realtime Save Error:", error);
+                console.error("Save Modal Data Critical Error:", error);
                 showAlert("ເກີດຂໍ້ຜິດພາດໃນການບັນທຶກ: " + error.message);
             }
         }
