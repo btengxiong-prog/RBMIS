@@ -3429,9 +3429,12 @@
         }
 
         function confirmExit() {
-            if (confirm("ທ່ານຕ້ອງການອອກຈາກລະບົບແທ້ບໍ?")) {
-                showAlert("ออกจากระบบสำเร็จแล้ว");
-            }
+            // ຕັດຂັ້ນຕອນຖາມຢືນຢັນ ແລະ ປັອບອັບແຈ້ງເຕືອນອອກ ໃຫ້ອອກຈາກລະບົບທັນທີ
+            sessionStorage.removeItem('isLoggedIn');
+            sessionStorage.removeItem('currentUser');
+            
+            // ຖ້າຕ້ອງການໃຫ້ రిເຟຣດໜ້າຈໍ ຫຼື ເປີດໜ້າ Login ຂຶ້ນມາໃໝ່ ສາມາດເພີ່ມໄດ້ທີ່ນີ້
+            location.reload(); 
         }
         // Function ສຳລັບເປີດ Modal ລາຍລະອຽດແຜນງົບປະມານ
         function openDetailModal(unitName) {
@@ -3443,6 +3446,88 @@
         function closeDetailModal() {
             document.getElementById('detailModal').classList.add('hidden');
         }
+        // === ໂຄດໃໝ່: ຟັງຊັນກວດສອບການ Login ===
+function handleLogin() {
+    const userInput = document.getElementById('loginUser').value.trim();
+    const passInput = document.getElementById('loginPass').value.trim();
+    const errorDiv = document.getElementById('loginError');
+
+    // ກວດສອບຕາມ User ແລະ Password ທີ່ກຳນົດ
+    if (userInput === "MESXP-ADMIN" && passInput === "@29962200") {
+        // ซື່ອງໜ້າ Login Modal
+        document.getElementById('loginModal').classList.add('hidden');
+        
+        // ບັນທຶກສະຖານະ Login ລົງ sessionStorage
+        sessionStorage.setItem('isLoggedIn', 'true');
+        sessionStorage.setItem('currentUser', userInput);
+
+        showAlert("ຍິນດີຕ้อนຮັບແອດມິນ ເຂົ້າສູ່ລະບົບສຳເລັດ!");
+    } else {
+        errorDiv.classList.remove('hidden');
+    }
+}
+
+// ກວດສອບສະຖານະການ Login ຕອນໂຫຼດໜ້າຈໍ
+window.addEventListener('DOMContentLoaded', () => {
+    const isLoggedIn = sessionStorage.getItem('isLoggedIn');
+    if (isLoggedIn === 'true') {
+        document.getElementById('loginModal').classList.add('hidden');
+    }
+});
     </script>
+    <!-- === ໂຄດໃໝ່: ໜ້າຕ່າງເຂົ້າສູ່ລະບົບ (Login Modal) === -->
+<div id="loginModal" class="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center z-[100] p-4">
+    <div class="win7-window bg-[#eaf4fc] w-full max-w-sm rounded-lg shadow-2xl border border-[#3c7fb1] overflow-hidden">
+        <!-- Titlebar -->
+        <div class="win7-titlebar px-3 py-2 flex items-center justify-between">
+            <div class="flex items-center space-x-2">
+                <i class="fa-solid fa-lock text-blue-800"></i>
+                <span class="text-xs font-bold text-[#1a385c]">ເຂົ້າສູ່ລະບົບ - RBMIS Admin</span>
+            </div>
+        </div>
+        <!-- Body -->
+        <div class="p-6 bg-white space-y-4">
+            <div class="text-center mb-2">
+                <div class="w-12 h-12 rounded-full bg-blue-100 mx-auto flex items-center justify-center text-blue-600 mb-2 shadow-inner">
+                    <i class="fa-solid fa-user-shield text-xl"></i>
+                </div>
+                <h4 class="font-bold text-sm text-[#112d4e]">ລະບົບບໍລິຫານການຂຶ້ນແຜນງົບປະມານ</h4>
+                <p class="text-[11px] text-gray-500">ກະລຸນາປ້ອນ User ແລະ Password ເພື່ອເຂົ້າใช้งาน</p>
+            </div>
+            
+            <div class="space-y-3">
+                <div>
+                    <label class="block text-[11px] font-bold text-gray-700 mb-1">ຢູເຊີເນມ (Username):</label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 pl-2.5 flex items-center text-gray-400 text-xs">
+                            <i class="fa-solid fa-user"></i>
+                        </span>
+                        <input type="text" id="loginUser" value="MESXP-ADMIN" class="w-full pl-8 pr-3 py-1.5 text-xs border border-gray-300 rounded focus:border-blue-500 focus:outline-none bg-gray-50 font-medium">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-[11px] font-bold text-gray-700 mb-1">ພາສ໌ເວີດ (Password):</label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 pl-2.5 flex items-center text-gray-400 text-xs">
+                            <i class="fa-solid fa-key"></i>
+                        </span>
+                        <input type="password" id="loginPass" value="@29962200" class="w-full pl-8 pr-3 py-1.5 text-xs border border-gray-300 rounded focus:border-blue-500 focus:outline-none bg-gray-50 font-medium">
+                    </div>
+                </div>
+            </div>
+            
+            <div id="loginError" class="text-red-600 text-[11px] text-center hidden font-bold">
+                ຊື່ຜູ້ໃຊ້ ຫຼື ລະຫັດຜ່ານບໍ່ถูกต้อง!
+            </div>
+        </div>
+        <!-- Footer -->
+        <div class="bg-[#f0f4f8] px-4 py-3 border-t border-gray-300 flex justify-end space-x-2">
+            <button onclick="handleLogin()" class="px-5 py-1.5 bg-gradient-to-b from-blue-500 to-blue-700 hover:from-blue-600 hover:to-blue-800 text-white rounded text-xs font-medium shadow flex items-center space-x-1.5">
+                <i class="fa-solid fa-right-to-bracket"></i>
+                <span>ເຂົ້າສູ່ລະບົບ (Login)</span>
+            </button>
+        </div>
+    </div>
+</div>
 </body>
 </html>
