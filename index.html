@@ -2833,6 +2833,23 @@
                 p1Cols.forEach(el => el.style.display = 'none');
                 p2Cols.forEach(el => el.style.display = '');
             }
+
+            // ອັບເດດຫົວຂໍ້ເອກະສານແບບໄດນາມິກ
+            const startYearInput = document.getElementById('reportStartYear');
+            const p1 = startYearInput && startYearInput.value ? parseInt(startYearInput.value) : 2021;
+            const p1End = p1 + 4;
+            const p2 = p1 + 5;
+            const p2End = p1 + 9;
+            const docTitle = document.getElementById('reportDocTitle');
+            if (docTitle) {
+                if (period === 'all') {
+                    docTitle.innerText = `ຕາຕະລາງສັງລວມແຜນລາຍຮັບ - ລາຍຈ່າຍງົບປະມານ ປະຕິບັດ 05 ປີ ແຕ່ປີ ${p1} ຫາ ປີ ${p1End} ແລະ ແຜນຄາດຄະເນລາຍຮັບ - ລາຍຈ່າຍແຕ່ປີ ${p2} ຫາ ປີ ${p2End}`;
+                } else if (period === 'p1') {
+                    docTitle.innerText = `ຕາຕະລາງສັງລວມແຜນລາຍຮັບ - ລາຍຈ່າຍງົບປະມານ ປະຕິບັດ 05 ປີ ແຕ່ປີ ${p1} ຫາ ປີ ${p1End}`;
+                } else if (period === 'p2') {
+                    docTitle.innerText = `ຕາຕະລາງສັງລວມແຜນຄາດຄະເນລາຍຮັບ - ລາຍຈ່າຍແຕ່ປີ ${p2} ຫາ ປີ ${p2End}`;
+                }
+            }
         }
 
         // ຟັງຊັນຊ່ວຍດຶງຍອດລວມປະຕິບັດແຜນ ແລະ ແຜນການ ຈາກຂໍ້ມູນທີ່ບັນທຶກໄວ້ໃນ LocalStorage
@@ -2896,12 +2913,6 @@
             const btnP2 = document.getElementById('btnPeriod2');
             if(btnP1) btnP1.innerText = `${p1} ຫາ ${p1End}`;
             if(btnP2) btnP2.innerText = `${p2} ຫາ ${p2End}`;
-
-            // ອັບເດດຫົວຂໍ້ເອກະສານ
-            const docTitle = document.getElementById('reportDocTitle');
-            if (docTitle) {
-                docTitle.innerText = `ຕາຕະລາງສັງລວມແຜນລາຍຮັບ - ລາຍຈ່າຍງົບປະມານ ປະຕິບັດ 05 ປີ ແຕ່ປີ ${p1} ຫາ ປີ ${p1End} ແລະ ແຜນຄາດຄະເນລາຍຮັບ - ລາຍຈ່າຍແຕ່ປີ ${p2} ຫາ ປີ ${p2End}`;
-            }
 
             // ໂຫຼດຂໍ້ມູນແຜນ ແລະ ປະຕິບັດຕົວຈິງ ທັງໝົດ 10 ປີ ມາໄວ້ໃນ Cache ກ່ອນ
             const planDataCache = {};
