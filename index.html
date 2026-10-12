@@ -2385,52 +2385,48 @@
         }
 
         // ຟັງຊັນສຳລັບໂຫຼດຂໍ້ມູນທີ່ເຄີຍບັນທຶກໄວ້
-        async function loadPlanData() {
+        let unsubPlan = null; // ຕົວແປັກຢຸດ Listener ເວລາປິດໜ້າຕ່າງ
+
+        function loadPlanData() {
             const yearInput = document.getElementById('planYearInput');
             if (!yearInput) return;
             
             const year = yearInput.value || 'default';
             
-            // ລ້າງຄ່າເກົ່າກ่อน
-            for (let i = 0; i <= 13; i++) {
-                const yInput = document.getElementById('est_y_' + i);
-                if (yInput) {
-                    yInput.value = '';
-                    document.getElementById('est_q1_' + i).value = '';
-                    document.getElementById('est_q2_' + i).value = '';
-                    _calcRowValues(i);
-                }
-            }
+            // ຖ້າມີ Listener ເກົ່າຢູ່ ໃຫ້ປິດກ່ອນເພື່ອບໍ່ໃຫ້ຊ້ຳຊ້ອນ
+            if (unsubPlan) unsubPlan();
 
-            try {
-                // ດຶງຈາກ Firebase Firestore
-                const docSnap = await dbFirestore.collection("budgetPlans").doc(year.toString()).get();
-                let planData = null;
-                
-                if (docSnap.exists) {
-                    planData = docSnap.data().data;
-                } else {
-                    // Fallback ມາ localStorage
-                    const savedData = localStorage.getItem('budgetPlan_' + year);
-                    if (savedData) planData = JSON.parse(savedData);
-                }
-
-                if (planData) {
+            // ໃຊ້ onSnapshot ຮັບຂໍ້ມູນແບບ Realtime ຈາກ Firebase
+            unsubPlan = dbFirestore.collection("budgetPlans").doc(year.toString())
+                .onSnapshot((docSnap) => {
+                    // ລ້າງຄ່າເກົ່າກ່ອນ
                     for (let i = 0; i <= 13; i++) {
-                        if (planData[i]) {
-                            const yInput = document.getElementById('est_y_' + i);
-                            if (yInput) {
-                                yInput.value = planData[i].y || '';
-                                document.getElementById('est_q1_' + i).value = planData[i].q1 || '';
-                                document.getElementById('est_q2_' + i).value = planData[i].q2 || '';
-                                calcEstimate(i);
+                        const yInput = document.getElementById('est_y_' + i);
+                        if (yInput) {
+                            yInput.value = '';
+                            document.getElementById('est_q1_' + i).value = '';
+                            document.getElementById('est_q2_' + i).value = '';
+                            _calcRowValues(i);
+                        }
+                    }
+
+                    if (docSnap.exists) {
+                        const planData = docSnap.data().data;
+                        for (let i = 0; i <= 13; i++) {
+                            if (planData[i]) {
+                                const yInput = document.getElementById('est_y_' + i);
+                                if (yInput) {
+                                    yInput.value = planData[i].y || '';
+                                    document.getElementById('est_q1_' + i).value = planData[i].q1 || '';
+                                    document.getElementById('est_q2_' + i).value = planData[i].q2 || '';
+                                    calcEstimate(i);
+                                }
                             }
                         }
                     }
-                }
-            } catch (e) {
-                console.error("Load Plan Error:", e);
-            }
+                }, (error) => {
+                    console.error("Realtime Plan Error:", error);
+                });
         }
 
         // ຟັງຊັນຈັດຟໍແມັດຕົວເລກຕອນພິມ (#,##0)
@@ -2918,6 +2914,11 @@
         // Close module modal
         function closeModule() {
             document.getElementById('moduleModal').classList.add('hidden');
+            
+            // ຍົກເລີກ Realtime Listeners ເມື່ອປິດ Modal
+            if (unsubPlan) { unsubPlan(); unsubPlan = null; }
+            if (unsubExec['regular']) { unsubExec['regular'](); unsubExec['regular'] = null; }
+            if (unsubExec['academic']) { unsubExec['academic'](); unsubExec['academic'] = null; }
         }
 
         // ຟັງຊັນແປງຕາຕະລາງເປັນ JSON ເພື່ອລົດຂະໜາດຂໍ້ມູນ (ປ້ອງກັນ LocalStorage ເຕັມ)
@@ -2983,12 +2984,9 @@
                         }
                     }
                     
-                    // ບັນທຶກຂຶ້ນ Firebase Firestore
+                    // ບັນທຶກຂຶ້ນ Firebase Firestore (Realtime จะอัปเดตอัตโนมัติ)
                     await dbFirestore.collection("budgetPlans").doc(year.toString()).set({ data: planData });
-                    
-                    // ສຳຮອງໄວ້ໃນ localStorage ເພື່ອຄວາມວ່ອງໄວ
-                    localStorage.setItem('budgetPlan_' + year, JSON.stringify(planData));
-                    showAlert("ບັນທຶກແຜນງົບປະມານ ສົກປີ " + year + " ຂຶ້ນ Cloud (Firebase) ສຳເລັດແລ້ວ!");
+                    showAlert("ບັນທຶກແຜນງົບປະມານ ສົກປີ " + year + " ຂຶ້ນ Realtime Cloud ສสำเร็จແລ້ວ!");
                 } 
                 else if (document.getElementById('importYearRegular')) {
                     const year = document.getElementById('importYearRegular').value || 'default';
@@ -2996,9 +2994,8 @@
                     const tbody = document.getElementById('table_body_regular');
                     if (tbody) {
                         let compressed = compressTableData(tbody);
-                        await dbFirestore.collection("execRegular").doc(`${year}_${period}`).set({ payload: compressed });
-                        localStorage.setItem(`exec_regular_${year}_${period}`, compressed);
-                        showAlert(`ບັນທຶກແຜນປະຕິບັດ (ປົກກະຕິ) ສົກປີ ${year} ຂຶ້ນ Cloud ສຳເລັດແລ້ວ!`);
+                        await dbFirestore.collection("execBudget").doc(`regular_${year}_${period}`).set({ payload: compressed });
+                        showAlert(`ບັນທຶກແຜນປະຕິບັດ (ປົກກະຕິ) ສົກປີ ${year} ຂຶ້ນ Realtime Cloud ສຳເລັດແລ້ວ!`);
                     }
                 } 
                 else if (document.getElementById('importYearAcademic')) {
@@ -3007,21 +3004,22 @@
                     const tbody = document.getElementById('table_body_academic');
                     if (tbody) {
                         let compressed = compressTableData(tbody);
-                        await dbFirestore.collection("execAcademic").doc(`${year}_${period}`).set({ payload: compressed });
-                        localStorage.setItem(`exec_academic_${year}_${period}`, compressed);
-                        showAlert(`ບັນທຶກແຜນປະຕິບັດ (ວິຊາການ) ສົກປີ ${year} ຂຶ້ນ Cloud ສຳເລັດແລ້ວ!`);
+                        await dbFirestore.collection("execBudget").doc(`academic_${year}_${period}`).set({ payload: compressed });
+                        showAlert(`ບັນທຶກແຜນປະຕິບັດ (ວິຊາການ) ສົກປີ ${year} ຂຶ້ນ Realtime Cloud ສຳເລັດແລ້ວ!`);
                     }
                 } 
                 else {
                     showAlert("ບັນທຶກຂໍ້ມູນສຳເລັດແລ້ວ!");
                 }
             } catch (error) {
-                console.error("Cloud Save Error:", error);
-                showAlert("ເກີດຂໍ້ຜິດພາດໃນการບັນທຶກຂຶ້ນ Cloud: " + error.message);
+                console.error("Realtime Save Error:", error);
+                showAlert("ເກີດຂໍ້ຜິດພາດໃນການບັນທຶກ: " + error.message);
             }
         }
 
         // ຟັງຊັນສຳລັບໂຫຼດຂໍ້ມູນປະຕິບັດແຜນ (ປົກກະຕິ ແລະ ວິຊາການ) ຈາກ LocalStorage ມາສະແດງ
+        let unsubExec = {}; // ເກັບ Listener ຂອງແຕ່ລະໂມດູນປະຕິບັດແຜນ
+
         function loadExecuteData(type) {
             let yearInputId = type === 'regular' ? 'importYearRegular' : 'importYearAcademic';
             let periodSelectId = type === 'regular' ? 'importPeriodRegular' : 'importPeriodAcademic';
@@ -3031,17 +3029,27 @@
             let periodSelect = document.getElementById(periodSelectId);
             let tbody = document.getElementById(tbodyId);
             
-            if (yearInput && periodSelect && tbody) {
-                let year = yearInput.value || 'default';
-                let period = periodSelect.value;
-                let savedData = localStorage.getItem(`exec_${type}_${year}_${period}`);
-                
-                if (savedData) {
-                    restoreTableData(tbody, savedData);
-                } else {
-                    tbody.innerHTML = generateEmptyRows(12);
-                }
-            }
+            if (!yearInput || !periodSelect || !tbody) return;
+
+            let year = yearInput.value || 'default';
+            let period = periodSelect.value;
+            let docKey = `${type}_${year}_${period}`;
+
+            // ປິດ Listener ເກົ່າຂອງ Type ນี้ຖ້າມີ
+            if (unsubExec[type]) unsubExec[type]();
+
+            // ໃຊ້ onSnapshot ຮັບຂໍ້ມູນແບບ Realtime ຈາກ Firebase
+            unsubExec[type] = dbFirestore.collection("execBudget").doc(docKey)
+                .onSnapshot((docSnap) => {
+                    if (docSnap.exists) {
+                        let compressed = docSnap.data().payload;
+                        restoreTableData(tbody, compressed);
+                    } else {
+                        tbody.innerHTML = generateEmptyRows(12);
+                    }
+                }, (error) => {
+                    console.error("Realtime Exec Error:", error);
+                });
         }
 
         // ຟັງຊັນສຳລັບດຶງຂໍ້ມູນ, ບວກລວມຍອດ ແລະ ສ້າງຕາຕະລາງລາຍງານ (ພ້ອມເຊື່ອງແຖວທີ່ຫວ່າງເປົ່າ)
