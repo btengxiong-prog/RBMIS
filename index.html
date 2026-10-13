@@ -2652,6 +2652,8 @@
             return html;
         }
 
+        // ໂຄດເກົ່າທີ່ຈະລຶບ 🆚 ໂຄດໃໝ່ທີ່ຈະແທນທັບ:
+        // ----------------------------------------------------
         // ຟັງຊັນສຳລັບຈັດການເມື່ອມີການເລືອກໄຟລ໌ Excel ໂດຍໃຊ້ SheetJS
         function importExcelData(event, type) {
             const file = event.target.files[0];
@@ -2669,41 +2671,61 @@
             if (periodSelect) periodText = periodSelect.options[periodSelect.selectedIndex].text;
             if (yearInput) yearVal = yearInput.value;
 
+            // --- 🌟 ສ່ວນທີ່ເພີ່ມໃໝ່: ຣີເສັດຂໍ້ມູນເກົ່າອອກຈາກໜ້າຈໍທັນທີ ---
+            const tbody = document.getElementById('table_body_' + type);
+            if (tbody) {
+                tbody.innerHTML = `<tr><td colspan="18" class="text-center p-8 text-gray-600 font-bold"><i class="fa-solid fa-spinner fa-spin text-blue-500 mr-2 text-lg"></i> ກຳລັງຣີເສັດຂໍ້ມູນເກົ່າ ແລະ ປະມວນຜົນຂໍ້ມູນໃໝ່...</td></tr>`;
+            }
+
             showAlert(`ກຳລັງອ່ານຂໍ້ມູນສົກປີ: ${yearVal} (${periodText})\nຈາກໄຟລ໌: "${file.name}"\nກະລຸນາລໍຖ້າຈັກໜ້ອຍ...`);
 
             const reader = new FileReader();
             reader.onload = function(e) {
-                try {
-                    const data = new Uint8Array(e.target.result);
-                    const workbook = XLSX.read(data, {type: 'array'});
-                    
-                    // ດຶງຂໍ້ມູນຈາກ Sheet ທຳອິດ
-                    const firstSheetName = workbook.SheetNames[0];
-                    const worksheet = workbook.Sheets[firstSheetName];
-                    
-                    // ແປງຂໍ້ມູນເປັນ Array ແບບ 2 ມິຕິ (row x col)
-                    const jsonData = XLSX.utils.sheet_to_json(worksheet, {header: 1, defval: ''});
-                    
-                    if (jsonData.length > 0) {
-                        renderExcelToTable(jsonData, type);
+                // --- 🌟 ສ່ວນທີ່ເພີ່ມໃໝ່: ໃຊ້ setTimeout ເພື່ອໃຫ້ໜ້າຈໍສະແດງການໂຫຼດໄດ້ກ່ອນທີ່ລະບົບຈະໄປອ່ານໄຟລ໌ (ປ້ອງກັນໜ້າຈໍຄ້າງ) ---
+                setTimeout(() => {
+                    try {
+                        const data = new Uint8Array(e.target.result);
+                        const workbook = XLSX.read(data, {type: 'array'});
                         
-                        // ເພີ່ມການບັນທຶກອັດຕະໂນມັດ (Auto-Save) ຫຼັງຈາກນຳເຂົ້າສຳເລັດ
-                        setTimeout(() => {
-                            const tbody = document.getElementById('table_body_' + type);
-                            if (tbody) {
-                                let periodVal = periodSelect ? periodSelect.value : 'y1';
-                                localStorage.setItem(`exec_${type}_${yearVal}_${periodVal}`, compressTableData(tbody));
-                                showAlert(`ນຳເຂົ້າ ແລະ ບັນທຶກລົງລະບົບອັດຕະໂນມັດ ສຳລັບສົກປີ ${yearVal} ສຳເລັດແລ້ວ!`);
-                            }
-                        }, 500);
+                        // ດຶງຂໍ້ມູນຈາກ Sheet ທຳອິດ
+                        const firstSheetName = workbook.SheetNames[0];
+                        const worksheet = workbook.Sheets[firstSheetName];
+                        
+                        // ແປງຂໍ້ມູນເປັນ Array ແບບ 2 ມິຕິ (row x col)
+                        const jsonData = XLSX.utils.sheet_to_json(worksheet, {header: 1, defval: ''});
+                        
+                        if (jsonData.length > 0) {
+                            renderExcelToTable(jsonData, type);
+                            
+                            // ເພີ່ມການບັນທຶກອັດຕະໂນມັດ (Auto-Save) ຫຼັງຈາກນຳເຂົ້າສຳເລັດ
+                            setTimeout(() => {
+                                const tbodyAfter = document.getElementById('table_body_' + type);
+                                if (tbodyAfter) {
+                                    let periodVal = periodSelect ? periodSelect.value : 'y1';
+                                    let compressedData = compressTableData(tbodyAfter);
+                                    
+                                    // ບັນທຶກລົງ LocalStorage
+                                    localStorage.setItem(`exec_${type}_${yearVal}_${periodVal}`, compressedData);
+                                    
+                                    // ອັບເດດຂຶ້ນ Firebase Realtime ພ້ອມ (ຖ້າມີການເຊື່ອມຕໍ່)
+                                    if (typeof dbFirestore !== 'undefined') {
+                                        dbFirestore.collection("execBudget").doc(`${type}_${yearVal}_${periodVal}`).set({ payload: compressedData }).catch(err => console.warn(err));
+                                    }
+                                    
+                                    showAlert(`ນຳເຂົ້າ ແລະ ບັນທຶກລົງລະບົບອັດຕະໂນມັດ ສຳລັບສົກປີ ${yearVal} ສຳເລັດແລ້ວ!`);
+                                }
+                            }, 500);
 
-                    } else {
-                        showAlert("ບໍ່ພົບຂໍ້ມູນໃນໄຟລ໌ Excel ນີ້");
+                        } else {
+                            if (tbody) tbody.innerHTML = generateEmptyRows(12); // ກໍລະນີບໍ່ພົບຂໍ້ມູນໃຫ້ຕາຕະລາງກັບມາຫວ່າງເປົ່າ
+                            showAlert("ບໍ່ພົບຂໍ້ມູນໃນໄຟລ໌ Excel ນີ້");
+                        }
+                    } catch (error) {
+                        console.error("Excel Parse Error:", error);
+                        if (tbody) tbody.innerHTML = generateEmptyRows(12); // ກໍລະນີ Error ໃຫ້ຣີເສັດຕາຕະລາງເປັນຄ່າເລີ່ມຕົ້ນ
+                        showAlert("ເກີດຂໍ້ຜິດພາດໃນການອ່ານໄຟລ໌ Excel. ກະລຸນາກວດສອບຮູບແບບໄຟລ໌.");
                     }
-                } catch (error) {
-                    console.error("Excel Parse Error:", error);
-                    showAlert("ເກີດຂໍ້ຜິດພາດໃນການອ່ານໄຟລ໌ Excel. ກະລຸນາກວດສອບຮູບແບບໄຟລ໌.");
-                }
+                }, 50); // ໜ່ວງເວລາ 50ms ໃຫ້ DOM ໄດ້ທຳການ Render ການລຶບຂໍ້ມູນກ່ອນ
             };
             reader.readAsArrayBuffer(file);
             
