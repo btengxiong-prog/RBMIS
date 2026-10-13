@@ -2659,7 +2659,6 @@
             const file = event.target.files[0];
             if (!file) return;
 
-            // ດຶງຄ່າປີ ແລະ ໄລຍະເວລາທີ່ຜູ້ໃຊ້ເລືອກ
             let periodText = "";
             let yearVal = "";
             let periodSelectId = type === 'regular' ? 'importPeriodRegular' : 'importPeriodAcademic';
@@ -2671,65 +2670,65 @@
             if (periodSelect) periodText = periodSelect.options[periodSelect.selectedIndex].text;
             if (yearInput) yearVal = yearInput.value;
 
-            // --- 🌟 ສ່ວນທີ່ເພີ່ມໃໝ່: ຣີເສັດຂໍ້ມູນເກົ່າອອກຈາກໜ້າຈໍທັນທີ ---
             const tbody = document.getElementById('table_body_' + type);
+            let periodVal = periodSelect ? periodSelect.value : 'y1';
+            let docKey = `${type}_${yearVal}_${periodVal}`;
+
+            // --- 🌟 1. ຂັ້ນຕອນການ Reset ຂໍ້ມູນເກົ່າອອກໝົດ 🌟 ---
+            // ລຶບຂໍ້ມູນອອກຈາກ LocalStorage
+            localStorage.removeItem(`exec_${docKey}`);
+            // ລຶບຂໍ້ມູນອອກຈາກ Firebase (ຖ້າມີ) ເພື່ອລ້າງກະດານໃຫ້ສະອາດ
+            if (typeof dbFirestore !== 'undefined') {
+                dbFirestore.collection("execBudget").doc(docKey).delete().catch(err => console.warn(err));
+            }
+            // ລ້າງໜ້າຈໍຕາຕະລາງໃຫ້ເປົ່າຫວ່າງ (Reset UI)
             if (tbody) {
-                tbody.innerHTML = `<tr><td colspan="18" class="text-center p-8 text-gray-600 font-bold"><i class="fa-solid fa-spinner fa-spin text-blue-500 mr-2 text-lg"></i> ກຳລັງຣີເສັດຂໍ້ມູນເກົ່າ ແລະ ປະມວນຜົນຂໍ້ມູນໃໝ່...</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="18" class="text-center p-8 text-gray-600 font-bold"><i class="fa-solid fa-broom text-red-500 mr-2 text-lg"></i> ກຳລັງລ້າງຂໍ້ມູນເກົ່າທຸກຮ່ວງອອກໝົດ... ແລ້ວອັບເດດຂໍ້ມູນໃໝ່ເຂົ້າ</td></tr>`;
             }
 
             showAlert(`ກຳລັງອ່ານຂໍ້ມູນສົກປີ: ${yearVal} (${periodText})\nຈາກໄຟລ໌: "${file.name}"\nກະລຸນາລໍຖ້າຈັກໜ້ອຍ...`);
 
             const reader = new FileReader();
             reader.onload = function(e) {
-                // --- 🌟 ສ່ວນທີ່ເພີ່ມໃໝ່: ໃຊ້ setTimeout ເພື່ອໃຫ້ໜ້າຈໍສະແດງການໂຫຼດໄດ້ກ່ອນທີ່ລະບົບຈະໄປອ່ານໄຟລ໌ (ປ້ອງກັນໜ້າຈໍຄ້າງ) ---
+                // ໜ່ວງເວລາໜ້ອຍໜຶ່ງໃຫ້ລະບົບລ້າງຂໍ້ມູນສຳເລັດ ແລ້ວຈຶ່ງອ່ານໄຟລ໌ໃໝ່
                 setTimeout(() => {
                     try {
                         const data = new Uint8Array(e.target.result);
                         const workbook = XLSX.read(data, {type: 'array'});
                         
-                        // ດຶງຂໍ້ມູນຈາກ Sheet ທຳອິດ
                         const firstSheetName = workbook.SheetNames[0];
                         const worksheet = workbook.Sheets[firstSheetName];
-                        
-                        // ແປງຂໍ້ມູນເປັນ Array ແບບ 2 ມິຕິ (row x col)
                         const jsonData = XLSX.utils.sheet_to_json(worksheet, {header: 1, defval: ''});
                         
                         if (jsonData.length > 0) {
+                            // --- 🌟 2. ນຳເອົາຂໍ້ມູນໃໝ່ເຂົ້າໄປໃນຕາຕະລາງ 🌟 ---
                             renderExcelToTable(jsonData, type);
                             
-                            // ເພີ່ມການບັນທຶກອັດຕະໂນມັດ (Auto-Save) ຫຼັງຈາກນຳເຂົ້າສຳເລັດ
+                            // ບັນທຶກອັດຕະໂນມັດ ຫຼັງຈາກອັບໂຫຼດແລ້ວ
                             setTimeout(() => {
                                 const tbodyAfter = document.getElementById('table_body_' + type);
                                 if (tbodyAfter) {
-                                    let periodVal = periodSelect ? periodSelect.value : 'y1';
                                     let compressedData = compressTableData(tbodyAfter);
+                                    localStorage.setItem(`exec_${docKey}`, compressedData);
                                     
-                                    // ບັນທຶກລົງ LocalStorage
-                                    localStorage.setItem(`exec_${type}_${yearVal}_${periodVal}`, compressedData);
-                                    
-                                    // ອັບເດດຂຶ້ນ Firebase Realtime ພ້ອມ (ຖ້າມີການເຊື່ອມຕໍ່)
                                     if (typeof dbFirestore !== 'undefined') {
-                                        dbFirestore.collection("execBudget").doc(`${type}_${yearVal}_${periodVal}`).set({ payload: compressedData }).catch(err => console.warn(err));
+                                        dbFirestore.collection("execBudget").doc(docKey).set({ payload: compressedData }).catch(err => console.warn(err));
                                     }
-                                    
-                                    showAlert(`ນຳເຂົ້າ ແລະ ບັນທຶກລົງລະບົບອັດຕະໂນມັດ ສຳລັບສົກປີ ${yearVal} ສຳເລັດແລ້ວ!`);
+                                    showAlert(`ຣີເສັດຂໍ້ມູນເກົ່າ ແລະ ອັບຂໍ້ມູນໃໝ່ຂອງສົກປີ ${yearVal} ສຳເລັດແລ້ວ!`);
                                 }
                             }, 500);
-
                         } else {
-                            if (tbody) tbody.innerHTML = generateEmptyRows(12); // ກໍລະນີບໍ່ພົບຂໍ້ມູນໃຫ້ຕາຕະລາງກັບມາຫວ່າງເປົ່າ
+                            if (tbody) tbody.innerHTML = generateEmptyRows(12);
                             showAlert("ບໍ່ພົບຂໍ້ມູນໃນໄຟລ໌ Excel ນີ້");
                         }
                     } catch (error) {
                         console.error("Excel Parse Error:", error);
-                        if (tbody) tbody.innerHTML = generateEmptyRows(12); // ກໍລະນີ Error ໃຫ້ຣີເສັດຕາຕະລາງເປັນຄ່າເລີ່ມຕົ້ນ
+                        if (tbody) tbody.innerHTML = generateEmptyRows(12);
                         showAlert("ເກີດຂໍ້ຜິດພາດໃນການອ່ານໄຟລ໌ Excel. ກະລຸນາກວດສອບຮູບແບບໄຟລ໌.");
                     }
-                }, 50); // ໜ່ວງເວລາ 50ms ໃຫ້ DOM ໄດ້ທຳການ Render ການລຶບຂໍ້ມູນກ່ອນ
+                }, 100);
             };
             reader.readAsArrayBuffer(file);
-            
-            // ລ້າງຄ່າ input ເພື່ອໃຫ້ອັບໂຫຼດໄຟລ໌ເກົ່າຊ້ຳໄດ້
             event.target.value = '';
         }
 
@@ -2741,7 +2740,6 @@
             let html = '';
             let startIndex = 0;
             
-            // 1. ຊອກຫາແຖວທີ່ເລີ່ມຕົ້ນມີ "ລວມທັງໝົດ" ເພື່ອເປັນຈຸດເລີ່ມຕົ້ນທີ່ແທ້ຈິງ ແລະ ຕັດຫົວຂໍ້ຍ່ອຍທີ່ບໍ່ຈຳເປັນອອກ
             for(let i = 0; i < data.length; i++) {
                 let rowText = data[i].join('').replace(/\s/g, '');
                 if(rowText.includes('ລວມທັງໝົດ')) {
@@ -2750,13 +2748,11 @@
                 }
             }
             
-            // ຖ້າບໍ່ພົບ "ລວມທັງໝົດ" ໃຫ້ໃຊ້ວິທີເດີມ ແຕ່ກວດສອບຂ້າມແຖວຫົວຂໍ້ຍ່ອຍພິເສດ
             if (startIndex === 0) {
                 for(let i = 0; i < data.length; i++) {
                     if(data[i].join('').trim() !== '') {
                         if (data[i].includes('ພສ') || data[i].includes('ເນື້ອໃນລາຍຈ່າຍ') || data[i].includes('ເລກບັນຊີ')) {
                             startIndex = i + 1;
-                            // ຂ້າມແຖວຫົວຂໍ້ຍ່ອຍອີກ 1 ແຖວ ຖ້າມີ (ເພື່ອປ້ອງກັນແຖວ "ຕົວເລກງົບປະມານ...")
                             if (startIndex < data.length && data[startIndex].join('').includes('ຕົວເລກ')) {
                                 startIndex++;
                             }
@@ -2770,43 +2766,36 @@
                 const row = data[i];
                 const rowString = row.join('').trim();
                 
-                // 2. ຂ້າມແຖວທີ່ວ່າງເປົ່າທັງໝົດ
                 if (rowString === '') continue;
-                
-                // 3. ຕັດແຖວ Footer ທີ່ເປັນຂີ້ເຫຍື້ອອອກ ເຊັ່ນ: %1, ວັນທີ, ຫຼື ແຖວທີ່ມີແຕ່ເລກໜ້າ (ເຊັ່ນ: 1 / 1)
                 if (rowString.includes('%1') || rowString.includes('ວັນທີ') || rowString.startsWith('%') || rowString.includes('1 / 1') || rowString.includes('1/1')) {
-                    continue; // ຂ້າມແຖວນີ້ໄປເລີຍ
+                    continue; 
                 }
 
-                // 4. ກວດສອບເພີ່ມເຕີມ: ຖ້າບໍ່ມີທັງ "ເລກບັນຊີ" (ຖັນທີ 4) ແລະ "ເນື້ອໃນລາຍຈ່າຍ" (ຖັນທີ 5) ໃຫ້ຕັດຖິ້ມອັດຕະໂນມັດ (ຊ່ວຍປ້ອງກັນແຖວທີ່ມີແຕ່ເລກໜ້າ)
                 let accCode = (row[4] || '').toString().trim();
                 let content = (row[5] || '').toString().trim();
-                if (accCode === '' && content === '') {
-                    continue; // ຂ້າມແຖວທີ່ວ່າງເປົ່າໃນສ່ວນຂອງເນື້ອຫາຫຼັກ
-                }
+                if (accCode === '' && content === '') continue;
 
-                // ກວດເບິ່ງວ່າເປັນແຖວຫົວຂໍ້ພາກຫຼືບໍ່ ໂດຍເບິ່ງຈາກການຍະຫວ່າງ ຫຼື ຄວາມຍາວຂອງເລກບັນຊີ
                 let isBold = (!row[1] || row[1] === '') ? 'font-bold bg-gray-100 text-[#112d4e]' : 'hover:bg-blue-50 transition-colors';
                 
                 html += `<tr class="border-b border-gray-300 ${isBold}">`;
                 
-                // ຕາຕະລາງປະຕິບັດແຜນມີ 18 ຖັນ: ພ(0) ຫາ ເນື້ອໃນ(5) ແລະ ຕົວເລກ(6 ຫາ 17)
                 for (let j = 0; j < 18; j++) {
                     let cellValue = row[j] !== undefined ? row[j] : '';
                     let align = 'text-center px-2 py-1.5';
                     
-                    if (j === 5) align = 'text-left min-w-[200px] px-2 py-1.5'; // ຖັນເນື້ອໃນລາຍຈ່າຍ
+                    if (j === 5) align = 'text-left min-w-[200px] px-2 py-1.5'; 
                     
                     if (j > 5) {
-                        align = 'text-right p-0'; // ເອົາ padding ອອກ ເພື່ອໃຫ້ input ເຕັມຫ້ອງ
+                        align = 'text-right p-0'; 
                         let numValue = '';
-                        if (!isNaN(cellValue) && cellValue !== '') {
+                        
+                        // --- 🌟 Reset ຄ່າທີ່ເປັນ 0 ຫຼື ຫວ່າງເປົ່າ ໃຫ້ເປັນ '-' ຢ່າງຊັດເຈນ 🌟 ---
+                        if (cellValue !== '' && cellValue !== 0 && cellValue !== '0' && !isNaN(cellValue)) {
                             numValue = Number(cellValue).toLocaleString('en-US');
-                        } else if (cellValue !== '') {
+                        } else if (cellValue !== '' && cellValue !== 0 && cellValue !== '0') {
                             numValue = cellValue;
                         }
                         
-                        // ປ່ຽນໃຫ້ເປັນ Input ເພື່ອໃຫ້ສາມາດແກ້ໄຂໄດ້
                         let inputStyle = isBold.includes('font-bold') ? 'font-bold text-blue-900' : 'text-gray-800';
                         cellValue = `<input type="text" value="${numValue}" oninput="formatOnInput(this)" class="w-full h-full px-2 py-1.5 text-right outline-none bg-transparent hover:bg-blue-50 focus:bg-blue-100 transition-colors ${inputStyle}" placeholder="-">`;
                     }
@@ -2816,13 +2805,13 @@
                 html += `</tr>`;
             }
             
-            // ຖ້າບໍ່ມີຂໍ້ມູນໃຫ້ສະແດງແຖວວ່າງເປົ່າ
             if (html === '') {
                 html = generateEmptyRows(12);
             }
             
             tbody.innerHTML = html;
         }
+
         // ==========================================
         // ລະບົບຄຳນວນ ແລະ ຈັດການຟອມນຳເຂົ້າແຜນງົບປະມານ
         // ==========================================
