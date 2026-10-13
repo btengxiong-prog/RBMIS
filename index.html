@@ -71,14 +71,81 @@
             transform: translateY(-1px);
         }
 
-        /* ຕັ້ງຄ່າການພິມ (Print) ເພື່ອໃຫ້ສະແດງສະເພາະຕາຕະລາງ ແລະ ເຊື່ອງເມນູຕ່າງໆ */
+        /* ຕັ້ງຄ່າການພິມ (Print) ເພື່ອໃຫ້ສະແດງສະເພາະຕາຕະລາງ ແລະ ແກ້ໄຂບັນຫາໜ້າຂາວ */
         @media print {
-            body * { visibility: hidden; }
-            .print-container, .print-container * { visibility: visible; }
-            .print-container { position: absolute; left: 0; top: 0; width: 100%; margin: 0; padding: 0; }
+            /* 1. ເຊື່ອງທຸກຢ່າງໃນໜ້າຈໍ ຍົກເວັ້ນ Modal ທີ່ກຳລັງເປີດຢູ່ */
+            body > *:not(#moduleModal) { display: none !important; }
+            
+            /* 2. ປົດລັອກ Layout ຫຼັກໃຫ້ເປັນໜ້າເວັບປົກກະຕິ (ລົບ Flex ແລະ Fixed) */
+            html, body {
+                background: white !important;
+                overflow: visible !important;
+                height: auto !important;
+                display: block !important;
+            }
+            
+            /* 3. ປົດ Fixed, Flex ແລະ Scrollbar ອອກຈາກ Modal */
+            #moduleModal {
+                display: block !important;
+                position: static !important;
+                padding: 0 !important;
+                background: white !important;
+            }
+            
+            /* 4. ເຮັດໃຫ້ປ່ອງຢ້ຽມເຕັມຈໍ ແລະ ບໍ່ມີຂອບ */
+            #moduleModal .win7-window {
+                display: block !important;
+                position: static !important;
+                border: none !important;
+                box-shadow: none !important;
+                height: auto !important;
+                max-height: none !important;
+                border-radius: 0 !important;
+            }
+            
+            /* 5. ເຊື່ອງ Title bar ແລະ ປຸ່ມກົດດ້ານລຸ່ມຂອງ Modal */
+            #moduleModal .win7-titlebar, 
+            #moduleModal .border-t {
+                display: none !important;
+            }
+            
+            /* 6. ປົດລັອກເນື້ອຫາພາຍໃນ ໃຫ້ສາມາດສະແດງຫຼາຍໜ້າ (Multi-page) ໄດ້ */
+            #modalBody {
+                display: block !important;
+                position: static !important;
+                overflow: visible !important;
+                height: auto !important;
+                max-height: none !important;
+                padding: 0 !important;
+            }
+            
+            /* 7. ປົດລັອກ Print Container ບໍ່ໃຫ້ຖືກຕັດ (Clip) */
+            .print-container {
+                display: block !important;
+                position: static !important;
+                overflow: visible !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                width: 100% !important;
+                height: auto !important;
+                background: white !important;
+            }
+
+            /* 8. ລົບເງົາ ແລະ ກອບຂອງແຜ່ນເຈ້ຍຈຳລອງໃນໜ້າຈໍ ອອກຕອນພິມແທ້ເພື່ອໃຫ້ເຕັມເຈ້ຍພໍດີ */
+            .print-friendly {
+                box-shadow: none !important;
+                border: none !important;
+                max-width: 100% !important;
+                width: 100% !important;
+                padding: 0 !important;
+                margin: 0 !important;
+            }
+            
+            /* 9. ເຊື່ອງປຸ່ມພິມ ແລະ ປຸ່ມອື່ນໆ ທີ່ບໍ່ຕ້ອງການໃຫ້ຕິດໃນໜ້າພິມ */
             .no-print { display: none !important; }
-            /* ບັງຄັບໃຫ້ພິມຕາຕະລາງເປັນລວງນອນ (Landscape) */
-            @page { size: landscape; margin: 1cm; }
+            
+            /* ບັງຄັບໃຫ້ພິມຕາຕະລາງເປັນລວງນອນ (Landscape) ແລະ ຕັ້ງຂອບເຈ້ຍ */
+            @page { size: landscape; margin: 10mm; }
         }
 
     </style>
@@ -2264,8 +2331,8 @@
                                 </div>
                             </div>
                             <div class="flex space-x-2">
-                                <button class="px-4 py-1.5 bg-gradient-to-b from-green-500 to-green-600 text-white rounded shadow-sm flex items-center space-x-1.5 hover:from-green-600 hover:to-green-700">
-                                    <i class="fa-solid fa-file-excel"></i> <span>ສົ່ງອອກ Excel</span>
+                                <button onclick="exportReportToExcel()" class="px-3 py-1.5 bg-gradient-to-b from-green-500 to-green-600 text-white rounded text-xs shadow-sm flex items-center space-x-1.5 hover:from-green-600 hover:to-green-700">
+                                    <i class="fa-solid fa-file-excel"></i><span>ສົ່ງອອກ Excel</span>
                                 </button>
                             </div>
                         </div>
@@ -4019,7 +4086,38 @@
 
         // Print action inside modal
         function printModalData() {
-            showAlert("ກຳລັງກະກຽມສັ່ງພິມເອກະສານ...");
+            // ເອີ້ນໃຊ້ໜ້າຕ່າງພິມຂອງ Browser ຊຶ່ງຈະເຮັດວຽກຮ່ວມກັບ @media print CSS ທີ່ຕັ້ງໄວ້ແລ້ວ
+            window.print();
+        }
+
+        // ຟັງຊັນສຳລັບສົ່ງອອກຕາຕະລາງລາຍງານເປັນ Excel
+        function exportReportToExcel() {
+            // ຊອກຫາຕາຕະລາງພາຍໃນ Modal ທີ່ກຳລັງເປີດຢູ່ (ໂຕທີ່ມີຄລາດ print-container)
+            let table = document.querySelector('#moduleModal .print-container table');
+            if (!table) {
+                // ກໍລະນີບໍ່ແມ່ນໜ້າ print-container, ຊອກຫາ table ທົ່ວໄປໃນ modal
+                table = document.querySelector('#moduleModal table:not(.hidden)');
+            }
+            
+            if (!table) {
+                showAlert("ບໍ່ພົບຂໍ້ມູນຕາຕະລາງທີ່ຈະສົ່ງອອກ!");
+                return;
+            }
+
+            // ດຶງຊື່ຫົວຂໍ້ມາຕັ້ງເປັນຊື່ໄຟລ໌
+            let titleEl = document.getElementById('modalTitle');
+            let filename = titleEl ? titleEl.innerText.trim().replace(/\s+/g, '_') : 'Budget_Report';
+            filename += '.xlsx';
+
+            try {
+                // ສ້າງ Workbook ຈາກຕາຕະລາງ HTML ໂດຍໃຊ້ SheetJS
+                let wb = XLSX.utils.table_to_book(table, {sheet: "ລາຍງານ"});
+                // ສັ່ງດາວໂຫຼດໄຟລ໌
+                XLSX.writeFile(wb, filename);
+            } catch (error) {
+                console.error("Export Error:", error);
+                showAlert("ເກີດຂໍ້ຜິດພາດໃນການສົ່ງອອກ Excel!");
+            }
         }
 
         // Helper notification dialog
