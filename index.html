@@ -576,11 +576,7 @@
             </div>
             <!-- Modal Footer Buttons -->
             <div class="bg-[#f0f4f8] px-4 py-3 border-t border-gray-300 flex items-center justify-end space-x-2">
-                <!-- ເພີ່ມ id="btnSaveModal" ເພື່ອໄວ້ຄວບຄຸມການປິດ-ເປີດ -->
-                <button id="btnSaveModal" onclick="saveModalData()" class="px-4 py-1.5 bg-gradient-to-b from-blue-500 to-blue-700 hover:from-blue-600 hover:to-blue-800 text-white rounded text-xs font-medium shadow flex items-center space-x-1.5">
-                    <i class="fa-solid fa-floppy-disk"></i>
-                    <span>ບັນທຶກ (Save)</span>
-                </button>
+                <!-- ເອົາປຸ່ມບັນທຶກອອກແລ້ວ ເນື່ອງຈາກມີລະບົບບັນທຶກອັດຕະໂນມັດ -->
                 <button onclick="printModalData()" class="px-4 py-1.5 bg-gradient-to-b from-emerald-500 to-emerald-700 hover:from-emerald-600 hover:to-emerald-800 text-white rounded text-xs font-medium shadow flex items-center space-x-1.5">
                     <i class="fa-solid fa-print"></i>
                     <span>ພິມ (Print)</span>
@@ -2949,6 +2945,7 @@
         function formatOnInput(el) {
             if (!el.value) {
                 el.setAttribute('value', ''); // ອັບເດດ attribute ເພື່ອໃຫ້ບັນທຶກດ້ວຍ innerHTML ໄດ້
+                triggerAutoSave();
                 return;
             }
             // ລຶບໂຕອັກສອນອື່ນໆ ໃຫ້ເຫຼືອແຕ່ຕົວເລກ ແລະ ຈຸດ (ສຳລັບທົດສະນິຍົມ)
@@ -2958,6 +2955,17 @@
             parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ","); 
             el.value = parts.join('.');
             el.setAttribute('value', el.value); // ອັບເດດ attribute ໃຫ້ກົງກັບຄ່າປັດຈຸບັນ ເພື່ອໃຫ້ຕອນ Save ເກັບຄ່າໃໝ່ໄປນຳ
+            
+            triggerAutoSave(); // ສັ່ງບັນທຶກອັດຕະໂນມັດເມື່ອມີການປ່ຽນແປງ
+        }
+
+        // ຕົວແປສຳລັບໜ່ວງເວລາການບັນທຶກອັດຕະໂນມັດ (Debounce)
+        let autoSaveTimeout = null;
+        function triggerAutoSave() {
+            clearTimeout(autoSaveTimeout);
+            autoSaveTimeout = setTimeout(() => {
+                saveModalData(true); // ເອີ້ນໃຊ້ຟັງຊັນບັນທຶກແບບງຽບໆ (ບໍ່ສະແດງ Alert)
+            }, 1000); // ຫຼັງຈາກຢຸດພິມ 1 ວິນາທີ ຈະບັນທຶກອັດຕະໂນມັດລົງຖານຂໍ້ມູນ
         }
 
         // ຟັງຊັນແປງຄ່າຟໍແມັດກັບມາເປັນຕົວເລກເພື່ອນຳໄປບວກລົບ
@@ -3412,15 +3420,7 @@
             document.getElementById('modalBody').innerHTML = data.html;
             document.getElementById('moduleModal').classList.remove('hidden');
             
-            // ສະແດງປຸ່ມບັນທຶກສະເພາະໜ້າທີ່ຕ້ອງປ້ອນຂໍ້ມູນ, ນອກນັ້ນໃຫ້ເຊື່ອງໄວ້
-            const btnSave = document.getElementById('btnSaveModal');
-            if (btnSave) {
-                if (['estimate', 'execute_regular', 'execute_academic'].includes(moduleKey)) {
-                    btnSave.style.display = 'flex';
-                } else {
-                    btnSave.style.display = 'none';
-                }
-            }
+            
             
             // ກວດສອບຖ້າເປັນໜ້າລາຍງານ ໃຫ້ຮຽກໃຊ້ຟັງຊັນສ້າງຕາຕະລາງ
             if (moduleKey === 'reports') {
@@ -3871,8 +3871,8 @@
             }
         }
 
-        // Save action inside modal
-        async function saveModalData() {
+        // Save action inside modal (ຮອງຮັບການບັນທຶກອັດຕະໂນມັດແບບ Silent)
+        async function saveModalData(silent = false) {
             try {
                 if (document.getElementById('planYearInput')) {
                     const yearInput = document.getElementById('planYearInput');
@@ -3901,13 +3901,13 @@
                     try {
                         if (typeof dbFirestore !== 'undefined') {
                             await dbFirestore.collection("budgetPlans").doc(year.toString()).set({ data: planData });
-                            showAlert("ບັນທຶກແຜນງົບປະມານ ສົກປີ " + year + " ທຸກແຖວສຳເລັດແລ້ວ!");
+                            if (!silent) showAlert("ບັນທຶກແຜນງົບປະມານ ສົກປີ " + year + " ທຸກແຖວສຳເລັດແລ້ວ!");
                         } else {
-                            showAlert("ບັນທຶກແຜນງົບປະມານ ສົກປີ " + year + " ລົງລະບົບສຳເລັດແລ້ວ!");
+                            if (!silent) showAlert("ບັນທຶກແຜນງົບປະມານ ສົກປີ " + year + " ລົງລະບົບສຳເລັດແລ້ວ!");
                         }
                     } catch (cloudErr) {
                         console.warn("Cloud Sync Warning:", cloudErr);
-                        showAlert("ບັນທຶກລົງເຄື່ອງສຳເລັດແລ້ວ! (ແຕ່ Cloud Sync ມີບັນຫາ: " + cloudErr.message + ")");
+                        if (!silent) showAlert("ບັນທຶກລົງເຄື່ອງສຳເລັດແລ້ວ! (ແຕ່ Cloud Sync ມີບັນຫາ: " + cloudErr.message + ")");
                     }
                 } 
                 else if (document.getElementById('importYearRegular')) {
@@ -3922,7 +3922,7 @@
                                 await dbFirestore.collection("execBudget").doc(`regular_${year}_${period}`).set({ payload: compressed });
                             }
                         } catch (e) { console.warn(e); }
-                        showAlert(`ບັນທຶກແຜນປະຕິບັດ (ປົກກະຕິ) ສົກປີ ${year} ສຳເລັດແລ້ວ!`);
+                        if (!silent) showAlert(`ບັນທຶກແຜນປະຕິບັດ (ປົກກະຕິ) ສົກປີ ${year} ສຳເລັດແລ້ວ!`);
                     }
                 } 
                 else if (document.getElementById('importYearAcademic')) {
@@ -3937,15 +3937,15 @@
                                 await dbFirestore.collection("execBudget").doc(`academic_${year}_${period}`).set({ payload: compressed });
                             }
                         } catch (e) { console.warn(e); }
-                        showAlert(`ບັນທຶກແຜນປະຕິບັດ (ວິຊາການ) ສົກປີ ${year} ສຳເລັດແລ້ວ!`);
+                        if (!silent) showAlert(`ບັນທຶກແຜນປະຕິບັດ (ວິຊາການ) ສົກປີ ${year} ສຳເລັດແລ້ວ!`);
                     }
                 } 
                 else {
-                    showAlert("ບັນທຶກຂໍ້ມູນສຳເລັດແລ້ວ!");
+                    if (!silent) showAlert("ບັນທຶກຂໍ້ມູນສຳເລັດແລ້ວ!");
                 }
             } catch (error) {
                 console.error("Save Modal Data Critical Error:", error);
-                showAlert("ເກີດຂໍ້ຜິດພາດໃນການບັນທຶກ: " + error.message);
+                if (!silent) showAlert("ເກີດຂໍ້ຜິດພາດໃນການບັນທຶກ: " + error.message);
             }
         }
 
